@@ -12,14 +12,14 @@ int main(int argc, char* argv[]) {
 	if(argc != 2) {
 		std::cout << "Usage:\n";
 		std::cout << argv[0] << " path-to-recipe-file\n";
-		return -1;
+		return 1;
 	}
 
 	auto recipe = Recipe(argv[1]);
 	if(!recipe.get_errors().empty()) {
 		std::cout << "Error loading \"" << argv[1] << "\":\n";
 		std::cout << recipe.get_errors();
-		return -1;
+		return 1;
 	}
 
 	Simulation simulation(recipe, threads);
