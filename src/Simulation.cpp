@@ -2,7 +2,6 @@
 #include <random>
 #include <cmath>
 #include <thread>
-#include <iostream>
 
 float lerp(float x, float y, float where) {
 	return where * (y - x) + x;
