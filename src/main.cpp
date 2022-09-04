@@ -6,10 +6,7 @@
 const int target_framerate = 60;
 const int threads = 8;
 
-template<class R, class P>
-int as_milliseconds(std::chrono::duration<R, P> dur) {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-}
+using namespace std::chrono;
 
 int main(int argc, char* argv[]) {
 	if(argc != 2) {
@@ -32,17 +29,17 @@ int main(int argc, char* argv[]) {
 			"Life?",
 			target_framerate);
 
-	auto last_frame_time = std::chrono::steady_clock::now();
+	auto last_frame_time = steady_clock::now();
 
 	while(display.window_is_open()) {
 		display.handle_events();
 
-		auto current_frame_time = std::chrono::steady_clock::now();
+		auto current_frame_time = steady_clock::now();
 		auto delta_time = current_frame_time - last_frame_time;
 		last_frame_time = current_frame_time;
 
 		int framerate = 0;
-		int delta_ms = as_milliseconds(delta_time);
+		int delta_ms = duration_cast<milliseconds>(delta_time).count();
 		if(delta_ms != 0) framerate = 1000 / delta_ms;
 
 		simulation.update();
