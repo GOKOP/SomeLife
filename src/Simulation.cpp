@@ -185,6 +185,9 @@ void Simulation::update() {
 
 	for(auto updater : updaters) {
 		while(updater->doing_work);
+	}
+
+	for(auto updater : updaters) {
 		std::unique_lock<std::mutex> lock(updater->mutex);
 		for(std::size_t i=0; i<updater->new_particles->size(); ++i) {
 			particles.remove((*updater->old_particles)[i]);
