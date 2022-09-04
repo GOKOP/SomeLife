@@ -9,6 +9,7 @@ Display::Display(int width, int height, std::string title, int framerate):
 	))
 {
 	if(framerate > 0) window.setFramerateLimit(framerate);
+	font.loadFromFile("res/DejaVuSans.ttf");
 }
 
 const sf::RenderWindow& Display::get_window() const {
@@ -27,12 +28,23 @@ void Display::draw_point(sf::Vector2f pos, sf::Color color) {
 	window.draw(circle);
 }
 
-void Display::draw_window(const QuadTree& particles) {
+void Display::print_framerate(int framerate) {
+	sf::Text text(sf::String(std::to_string(framerate) + " FPS"), font, 15);
+	text.setFillColor(sf::Color::White);
+	text.setOutlineColor(sf::Color::Black);
+	text.setOutlineThickness(2);
+	text.setPosition(5, 5);
+	window.draw(text);
+}
+
+void Display::draw_window(const QuadTree& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
 	for(const auto& particle : particles) {
 		draw_point(particle.position, particle.color);
 	}
+
+	print_framerate(framerate);
 
 	window.display();
 }

@@ -34,9 +34,6 @@ int main(int argc, char* argv[]) {
 
 	auto last_frame_time = std::chrono::steady_clock::now();
 
-	int measurement_count = 0;
-	float measurement_sum = 0;
-
 	while(display.window_is_open()) {
 		display.handle_events();
 
@@ -44,15 +41,11 @@ int main(int argc, char* argv[]) {
 		auto delta_time = current_frame_time - last_frame_time;
 		last_frame_time = current_frame_time;
 
-		std::cout << "expected: " << 1000 / target_framerate << "ms";
-		std::cout << " measured: " << as_milliseconds(delta_time) << "ms" << std::endl;
-
-		++measurement_count;
-		measurement_sum += as_milliseconds(delta_time);
+		int framerate = 0;
+		int delta_ms = as_milliseconds(delta_time);
+		if(delta_ms != 0) framerate = 1000 / delta_ms;
 
 		simulation.update();
-		display.draw_window(simulation.get_particles());
+		display.draw_window(simulation.get_particles(), framerate);
 	}
-
-	std::cout << "Average: " << measurement_sum / measurement_count << "ms" << std::endl;
 }

@@ -8,9 +8,11 @@
 
 class Display {
 	sf::RenderWindow window;
+	sf::Font font;
 	float point_radius;
 
 	void draw_point(sf::Vector2f pos, sf::Color color);
+	void print_framerate(int framerate);
 
 public:
 	Display(int width, int height, std::string title, int framerate);
@@ -18,6 +20,6 @@ public:
 	const sf::RenderWindow& get_window() const;
 	bool window_is_open() const;
 
-	void draw_window(const QuadTree& particles);
+	void draw_window(const QuadTree& particles, int framerate);
 	void handle_events();
 };
