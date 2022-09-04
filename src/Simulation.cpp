@@ -178,12 +178,6 @@ void Simulation::update() {
 	if(updaters.empty()) return;
 
 	for(auto updater : updaters) {
-		std::unique_lock<std::mutex> lock(updater->mutex);
-		updater->doing_work = true;
-		updater->waiter.notify_one();
-	}
-
-	for(auto updater : updaters) {
 		while(updater->doing_work);
 	}
 
@@ -194,6 +188,12 @@ void Simulation::update() {
 			particles.insert((*updater->new_particles)[i]);
 		}
 		updater->swap_vectors();
+	}
+
+	for(auto updater : updaters) {
+		std::unique_lock<std::mutex> lock(updater->mutex);
+		updater->doing_work = true;
+		updater->waiter.notify_one();
 	}
 }
 
