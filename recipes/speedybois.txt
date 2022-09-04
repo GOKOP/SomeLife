@@ -1,0 +1,39 @@
+window 800 600
+friction 0.2
+
+particles yellow 1000
+particles blue 1000
+particles red 1000
+particles green 1000
+
+## this causes formation of moving "cells" with yellow heads and blue tails
+
+rule yellow yellow 5 80 -0.04
+rule blue yellow 5 80 -0.03
+rule yellow blue 5 80 0.02
+
+## same thing only with red heads and green tails
+
+rule red red 5 80 -0.04
+rule green red 5 80 -0.03
+rule red green 5 80 0.02
+
+## some fun interaction between them
+
+# make tails repelled by other type's heads
+rule blue red 5 40 0.01
+rule green yellow 5 40 0.01
+
+# make redheads chase yellowheads
+rule yellow red 5 80 0.02
+rule red yellow 5 80 -0.02
+
+## stop these from being in the same spot but don't create any other interaction
+
+rule blue blue 5 5 0
+rule yellow blue 5 5 0
+rule yellow green 5 5 0
+rule green green 5 5 0
+rule green yellow 5 5 0
+rule red green 5 5 0
+rule red blue 5 5 0
