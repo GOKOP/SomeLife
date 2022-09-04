@@ -39,8 +39,8 @@ int main(int argc, char* argv[]) {
 		last_frame_time = current_frame_time;
 
 		int framerate = 0;
-		int delta_ms = duration_cast<milliseconds>(delta_time).count();
-		if(delta_ms != 0) framerate = 1000 / delta_ms;
+		int delta_ms = duration_cast<microseconds>(delta_time).count();
+		if(delta_ms != 0) framerate = 1000000 / delta_ms;
 
 		simulation.update();
 		display.draw_window(simulation.get_particles(), framerate);
