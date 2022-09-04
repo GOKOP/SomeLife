@@ -12,6 +12,3 @@ struct Particle {
 
 bool operator==(const Particle& left, const Particle& right);
 bool operator!=(const Particle& left, const Particle& right);
-
-// to use in std::map
-bool operator<(const Particle& left, const Particle& right);
