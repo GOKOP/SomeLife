@@ -1,0 +1,18 @@
+window 800 600
+friction 0.2
+
+particles yellow 1000
+particles green 1000
+particles cyan 1000
+
+rule yellow green 5 80 -0.05
+rule green yellow 5 80 -0.05
+rule cyan yellow 5 80 -0.03
+rule cyan green 5 80 -0.03
+rule yellow cyan 5 80 0.02
+rule green cyan 5 80 0.02
+
+rule yellow yellow 5 80 0.01
+rule green green 5 80 0.01
+
+rule cyan cyan 5 2 0
