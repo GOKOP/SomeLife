@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Config config("somelife.conf");
+	Config config("res/somelife.conf");
 	if(!config.get_errors().empty()) {
 		std::cout << "Problems reading config:\n";
 		std::cout << config.get_errors() << "\n";
