@@ -2,9 +2,7 @@
 #include <iostream>
 #include "Display.hpp"
 #include "Simulation.hpp"
-
-const int target_framerate = 60;
-const int threads = 8;
+#include "Config.hpp"
 
 using namespace std::chrono;
 
@@ -15,6 +13,15 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	Config config("somelife.conf");
+	if(!config.get_errors().empty()) {
+		std::cout << "Problems reading config:\n";
+		std::cout << config.get_errors() << "\n";
+		std::cout << "Config in use:\n";
+		std::cout << "target_fps=" << config.get_target_fps() << "\n";
+		std::cout << "threads=" << config.get_threads() << "\n\n";
+	}
+
 	auto recipe = Recipe(argv[1]);
 	if(!recipe.get_errors().empty()) {
 		std::cout << "Error loading \"" << argv[1] << "\":\n";
@@ -22,12 +29,12 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Simulation simulation(recipe, threads);
+	Simulation simulation(recipe, config.get_threads());
 	Display display(
 			simulation.get_board_size().x,
 			simulation.get_board_size().y,
 			"Life?",
-			target_framerate);
+			config.get_target_fps());
 
 	auto last_frame_time = steady_clock::now();
 
