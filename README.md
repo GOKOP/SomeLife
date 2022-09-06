@@ -52,6 +52,7 @@ The directory that SomeLife is run from should contain the `res` directory.
 Possible commands are: `window`, `friction`, `particles` and `rule`. 
 Comments are indicated by the `#` sign at the beginning of the line. 
 The file must start with a `window` command, and must not have more than one such command.
+The "recipes" directory contains example recipes as well as a python script to generate random ones.
 
 #### window
 
