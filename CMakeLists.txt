@@ -12,12 +12,12 @@ target_link_libraries(somelife sfml-graphics)
 
 add_custom_command(
 	TARGET somelife POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	${CMAKE_SOURCE_DIR}/res
 	${CMAKE_CURRENT_BINARY_DIR}/res)
 
 add_custom_command(
 	TARGET somelife POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	${CMAKE_SOURCE_DIR}/recipes
 	${CMAKE_CURRENT_BINARY_DIR}/recipes)
