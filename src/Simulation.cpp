@@ -25,7 +25,7 @@ Simulation::Simulation(const Recipe& recipe, int threads):
 			auto window = std::get<Recipe::Window>(step);
 			params.board_size.x = window.width;
 			params.board_size.y = window.height;
-			particles = QuadTree(0, {0, 0, window.width, window.height});
+			particles = QuadTree(0, {0, 0, static_cast<float>(window.width), static_cast<float>(window.height)});
 		}
 		else if(std::holds_alternative<Recipe::Friction>(step)) {
 			auto friction = std::get<Recipe::Friction>(step);
