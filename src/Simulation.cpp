@@ -118,7 +118,7 @@ void Simulation::add_rule(const Rule& rule) {
 float Simulation::ParticleUpdater::calculate_force(const Rule& rule, float distance) {
 	float large_value = 1;
 
-	if(distance > rule.last_cut) return 0;
+	if(distance > rule.second_cut) return 0;
 
 	if(distance < rule.first_cut) {
 		float val = (rule.first_cut / distance) - 1 + rule.peak;
@@ -126,8 +126,8 @@ float Simulation::ParticleUpdater::calculate_force(const Rule& rule, float dista
 		else return val;
 	}
 
-	if(rule.last_cut == rule.first_cut) return 0;
-	return lerp(rule.peak, 0, distance / (rule.last_cut - rule.first_cut));
+	if(rule.second_cut == rule.first_cut) return 0;
+	return lerp(rule.peak, 0, distance / (rule.second_cut - rule.first_cut));
 }
 
 void Simulation::ParticleUpdater::execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2) {
@@ -218,10 +218,10 @@ void Simulation::ParticleUpdater::run(const QuadTree* particles) {
 				if(rule.particle1_color != particle1.color) continue;
 	
 				auto relevant_area = sf::FloatRect(
-						particle1.position.x - rule.last_cut,
-						particle1.position.y - rule.last_cut,
-						rule.last_cut * 2,
-						rule.last_cut * 2);
+						particle1.position.x - rule.second_cut,
+						particle1.position.y - rule.second_cut,
+						rule.second_cut * 2,
+						rule.second_cut * 2);
 	
 				auto nodes = particles->get_leaves_in(relevant_area);
 				for(const auto node : nodes) {

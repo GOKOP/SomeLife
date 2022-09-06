@@ -128,7 +128,7 @@ std::optional<Recipe::Step> Recipe::load_rule(const std::vector<std::string>& wo
 		errors += std::string("\"") + words[4] + "\" is not a floating point number\n";
 		return std::nullopt;
 	}
-	float last_cut = maybe_value.value();
+	float second_cut = maybe_value.value();
 
 	maybe_value = stof(words[5]);
 	if(!maybe_value.has_value()) {
@@ -137,7 +137,7 @@ std::optional<Recipe::Step> Recipe::load_rule(const std::vector<std::string>& wo
 	}
 	float peak = maybe_value.value();
 
-	return Rule { color1, color2, first_cut, last_cut, peak };
+	return Rule { color1, color2, first_cut, second_cut, peak };
 }
 
 std::optional<Recipe::Step> Recipe::load_window(const std::vector<std::string>& words) {
