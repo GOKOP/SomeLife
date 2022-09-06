@@ -2,6 +2,7 @@
 
 Simulates interactions between particles, sometimes called "particle life".
 Called "SomeLife" because that's what I've happened to call the directory where I've started messing with the idea.
+It's somewhat inspired by [this video](https://www.youtube.com/watch?v=Z_zmZ23grXE), but differs from what's there.
 
 ## Build
 
@@ -25,15 +26,15 @@ Make sure to specify the build type, as CMake's default (Debug) is unoptimized a
 The simplest way to get SFML on Windows and have it recognized by CMake is to use [vcpkg](https://vcpkg.io/en/index.html).
 You can use Visual Studio's built-in support for CMake projects (although you may need to install it).
 
-1. If you don't have vcpkg, [follow these instructions](https://vcpkg.io/en/getting-started.html)
+1. If you don't have vcpkg, [follow these instructions](https://vcpkg.io/en/getting-started.html).
 Vcpkg seems to install x86 libraries by default, so unless you're going to compile for x86, install SFML with the following command:
 ```
 ./vcpkg.exe install SFML --triplet x64-windows
 ```
-3. In Visual Studio, select the "open local folder" option and select the project directory.
-4. Go to "manage configurations" and add a configuration "x64-Release". Debug build is unoptimized and thus very slow.
-5. Select Project > Configure Cache
-6. Switch to the "x64-Release" configuration, choose the "somelife.exe" target and build it.
+2. In Visual Studio, select the "open local folder" option and select the project directory.
+3. Go to "manage configurations" and add a configuration "x64-Release". Debug build is unoptimized and thus very slow.
+4. Select Project > Configure Cache
+5. Switch to the "x64-Release" configuration, choose the "somelife.exe" target and build it.
 
 ## Usage
 
@@ -118,3 +119,7 @@ Force before `first_cut` is always positive (repelling).
 
 For any given particle, every rule where its color is `color1` is considered for every surrounding particle of `color2` colors.
 Force is added up to velocity and position is updated after considering all relevant rules.
+
+### Config
+
+In the file `res/somelife.conf` you can specify target framerate of the simulation as well as the number of threads.
