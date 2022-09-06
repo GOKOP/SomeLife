@@ -1,1 +1,6 @@
 build
+
+# Visual Studio stuff
+.vs
+out
+CMakeSettings.json
