@@ -5,7 +5,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
-#include "QuadTree.hpp"
+#include "ParticleGrid.hpp"
 #include "Recipe.hpp"
 
 class Simulation {
@@ -40,11 +40,11 @@ class Simulation {
 		void execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2);
 		void perform_movement(Particle& particle);
 		void fix_particle(Particle& particle);
-		void run(const QuadTree* particles);
+		void run(const ParticleGrid* particles);
 	};
 
 	Params params;
-	QuadTree particles;
+	ParticleGrid particles;
 	std::vector<ParticleUpdater*> updaters;
 
 	void add_particle(const Particle& particle);
@@ -56,7 +56,7 @@ public:
 	Simulation(const Recipe& recipe, int threads);
 	~Simulation();
 
-	const QuadTree& get_particles() const;
+	const ParticleGrid& get_particles() const;
 	const sf::Vector2i get_board_size() const;
 
 	void update();

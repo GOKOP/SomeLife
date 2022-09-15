@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "QuadTree.hpp"
+#include "ParticleGrid.hpp"
 
 #define POINT_RADIUS 2
 
@@ -20,6 +20,6 @@ public:
 	const sf::RenderWindow& get_window() const;
 	bool window_is_open() const;
 
-	void draw_window(const QuadTree& particles, int framerate);
+	void draw_window(const ParticleGrid& particles, int framerate);
 	void handle_events();
 };

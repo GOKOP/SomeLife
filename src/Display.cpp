@@ -37,7 +37,7 @@ void Display::print_framerate(int framerate) {
 	window.draw(text);
 }
 
-void Display::draw_window(const QuadTree& particles, int framerate) {
+void Display::draw_window(const ParticleGrid& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
 	for(const auto& particle : particles) {

@@ -12,7 +12,7 @@ void float_bandaid(float& val) {
 }
 
 Simulation::Simulation(const Recipe& recipe, int threads):
-	particles(0, {0, 0, 0, 0})
+	particles({0, 0}, 1)
 {
 	for(int i=0; i<threads; ++i) {
 		updaters.push_back(new ParticleUpdater(params));
@@ -25,7 +25,7 @@ Simulation::Simulation(const Recipe& recipe, int threads):
 			auto window = std::get<Recipe::Window>(step);
 			params.board_size.x = window.width;
 			params.board_size.y = window.height;
-			particles = QuadTree(0, {0, 0, static_cast<float>(window.width), static_cast<float>(window.height)});
+			particles = ParticleGrid({window.width, window.height}, 30);
 		}
 		else if(std::holds_alternative<Recipe::Friction>(step)) {
 			auto friction = std::get<Recipe::Friction>(step);
@@ -56,7 +56,7 @@ Simulation::~Simulation() {
 	}
 }
 
-const QuadTree& Simulation::get_particles() const {
+const ParticleGrid& Simulation::get_particles() const {
 	return particles;
 }
 
@@ -85,7 +85,7 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 }
 
 void Simulation::assign_particles() {
-	int count = particles.get_total_elem_count();
+	int count = particles.get_total_particle_count();
 	int per_thread = count / updaters.size();
 	int counter = 0;
 
@@ -204,7 +204,7 @@ Simulation::ParticleUpdater::ParticleUpdater(const Params& params):
 	params(params)
 {}
 
-void Simulation::ParticleUpdater::run(const QuadTree* particles) {
+void Simulation::ParticleUpdater::run(const ParticleGrid* particles) {
 	std::unique_lock<std::mutex> lock(mutex);
 	while(true) {
 		waiter.wait(lock, [&]{ return doing_work ? true : false; });
@@ -223,9 +223,9 @@ void Simulation::ParticleUpdater::run(const QuadTree* particles) {
 						rule.second_cut * 2,
 						rule.second_cut * 2);
 	
-				auto nodes = particles->get_leaves_in(relevant_area);
-				for(const auto node : nodes) {
-					for(const auto& particle2 : node->get_elems()) {
+				auto cells = particles->get_cells_in(relevant_area);
+				for(const auto cell : cells) {
+					for(const auto& particle2 : cell) {
 						if(particle1 == particle2) continue;
 						if(rule.particle2_color != particle2.color) continue;
 						execute_rule(rule, particle1, particle2);
