@@ -4,6 +4,7 @@
 #include <string>
 #include <mutex>
 #include <atomic>
+#include <utility>
 #include <condition_variable>
 #include "ParticleGrid.hpp"
 #include "Recipe.hpp"
@@ -20,10 +21,7 @@ class Simulation {
 	// writing to any field should be preceeded by acquiring a lock on `mutex`
 	// `doing_work` should be set to true from outside the thread
 	struct ParticleUpdater {
-		std::vector<Particle> particle_vec1;
-		std::vector<Particle> particle_vec2;
-		std::vector<Particle>* old_particles;
-		std::vector<Particle>* new_particles;
+		std::pair<std::size_t, std::size_t> working_range;
 
 		std::atomic<bool> doing_work;
 		std::atomic<bool> program_finished;
@@ -34,13 +32,12 @@ class Simulation {
 
 		ParticleUpdater(const Params& params);
 
-		void swap_vectors();
 		float calculate_force(const Rule& rule, float distance);
 		sf::Vector2f apply_friction(sf::Vector2f velocity);
 		void execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2);
 		void perform_movement(Particle& particle);
 		void fix_particle(Particle& particle);
-		void run(const ParticleGrid* particles);
+		void run(ParticleGrid* particles);
 	};
 
 	Params params;
@@ -50,7 +47,7 @@ class Simulation {
 	void add_particle(const Particle& particle);
 	void add_random_particles(int amount, sf::Color color);
 	void add_rule(const Rule& rule);
-	void assign_particles();
+	void assign_ranges();
 
 public:
 	Simulation(const Recipe& recipe, int threads);

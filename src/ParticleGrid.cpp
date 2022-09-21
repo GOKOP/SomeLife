@@ -5,14 +5,33 @@ ParticleGrid::ParticleGrid(sf::Vector2i window_size, int cell_resolution):
 	grid_size(cell_resolution, cell_resolution),
 	cell_size(window_size.x / cell_resolution, window_size.y / cell_resolution),
 	cell_positions((grid_size.x * grid_size.y), 0),
+	p1_is_new(false),
 	compare(grid_size.x, cell_size)
 {}
 
 const std::vector<Particle>& ParticleGrid::get_particles() const {
-	return particles;
+	if(p1_is_new) return particles2;
+	else return particles1;
+}
+
+const std::vector<Particle>& ParticleGrid::get_new_particles() const {
+	if(p1_is_new) return particles1;
+	else return particles2;
+}
+
+std::vector<Particle>& ParticleGrid::get_mut_particles() {
+	if(p1_is_new) return particles2;
+	else return particles1;
+}
+
+std::vector<Particle>& ParticleGrid::get_mut_new_particles() {
+	if(p1_is_new) return particles1;
+	else return particles2;
 }
 
 void ParticleGrid::insert(const Particle& particle) {
+	auto& particles = get_mut_particles();
+
 	auto it = particles.begin();
 	for(it; it != particles.end(); ++it) {
 		if(compare(particle, *it)) break;
@@ -63,13 +82,15 @@ std::vector<std::pair<std::size_t, std::size_t>> ParticleGrid::get_ranges_in(
 		}
 	}
 	if(range_i >= 0 && range_i < res.size() && res[range_i].second == 0) {
-		res[range_i].second = particles.size();
+		res[range_i].second = get_particles().size();
 	}
 
 	return res;
 }
 
 void ParticleGrid::remove(const Particle& particle) {
+	auto& particles = get_mut_particles();
+
 	auto it = std::find(particles.begin(), particles.end(), particle);
 	particles.erase(it);
 
@@ -83,7 +104,32 @@ void ParticleGrid::remove(const Particle& particle) {
 }
 
 void ParticleGrid::sort() {
+	auto& particles = get_mut_particles();
 	std::sort(particles.begin(), particles.end(), compare);
+
+	// regenerate cell positions
+	int prev_cell_ord = -1;
+	for(int i=0; i<particles.size(); ++i) {
+		int cell_x = particles[i].position.x / cell_size.x;
+		int cell_y = particles[i].position.y / cell_size.y;
+		int cell_ord = grid_size.x * cell_y + cell_x;
+
+		if(cell_ord != prev_cell_ord) {
+			for(int j = prev_cell_ord + 1; j <= cell_ord; ++j) {
+				cell_positions[cell_ord] = i;
+			}
+		}
+
+		prev_cell_ord = cell_ord;
+	}
+}
+
+void ParticleGrid::swap_vecs() {
+	p1_is_new = !p1_is_new;
+}
+
+void ParticleGrid::init_new_with_old() {
+	get_mut_new_particles() = get_particles();
 }
 
 ParticleGrid::CompareByGridCell::CompareByGridCell(int grid_width, sf::Vector2f cell_size):

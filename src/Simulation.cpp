@@ -41,7 +41,8 @@ Simulation::Simulation(const Recipe& recipe, int threads):
 		}
 	}
 
-	assign_particles();
+	particles.init_new_with_old();
+	assign_ranges();
 }
 
 Simulation::~Simulation() {
@@ -84,31 +85,15 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 	}
 }
 
-void Simulation::assign_particles() {
+void Simulation::assign_ranges() {
 	int count = particles.get_particles().size();
 	int per_thread = count / updaters.size();
 	int counter = 0;
 
-	auto current_updater = updaters.begin();
-	std::unique_lock<std::mutex> lock((*current_updater)->mutex);
-	(*current_updater)->particle_vec1.clear();
-	(*current_updater)->particle_vec2.clear();
-
-	for(const auto& particle : particles.get_particles()) {
-		(*current_updater)->particle_vec1.push_back(particle);
-		(*current_updater)->particle_vec2.push_back(particle);
-		++counter;
-		if(counter == per_thread) {
-			counter = 0;
-			if(current_updater + 1 == updaters.end()) continue;
-
-			++current_updater;
-			lock = std::unique_lock<std::mutex>((*current_updater)->mutex);
-			(*current_updater)->particle_vec1.clear();
-			(*current_updater)->particle_vec2.clear();
-		}
+	for(int i=0; i<updaters.size(); ++i) {
+		if(i == updaters.size() - 1) updaters[i]->working_range = {i * per_thread, count};
+		else updaters[i]->working_range = {i * per_thread, i * per_thread + per_thread};
 	}
-	lock.unlock();
 }
 
 void Simulation::add_rule(const Rule& rule) {
@@ -180,14 +165,8 @@ void Simulation::update() {
 		while(updater->doing_work);
 	}
 
-	for(auto updater : updaters) {
-		std::unique_lock<std::mutex> lock(updater->mutex);
-		for(std::size_t i=0; i<updater->new_particles->size(); ++i) {
-			particles.remove((*updater->old_particles)[i]);
-			particles.insert((*updater->new_particles)[i]);
-		}
-		updater->swap_vectors();
-	}
+	particles.swap_vecs();
+	particles.sort();
 
 	for(auto updater : updaters) {
 		std::unique_lock<std::mutex> lock(updater->mutex);
@@ -197,22 +176,24 @@ void Simulation::update() {
 }
 
 Simulation::ParticleUpdater::ParticleUpdater(const Params& params): 
-	old_particles(&particle_vec1),
-	new_particles(&particle_vec2),
+	working_range{0, 0},
 	doing_work(false),
 	program_finished(false),
 	params(params)
 {}
 
-void Simulation::ParticleUpdater::run(const ParticleGrid* particles) {
+void Simulation::ParticleUpdater::run(ParticleGrid* particles) {
 	std::unique_lock<std::mutex> lock(mutex);
 	while(true) {
 		waiter.wait(lock, [&]{ return doing_work ? true : false; });
 		if(program_finished) return;
 
-		for(std::size_t i=0; i<new_particles->size(); ++i) {
-			auto& particle1 = (*new_particles)[i];
-			particle1 = (*old_particles)[i];
+		const auto& old_particles = particles->get_particles();
+		auto& new_particles = particles->get_mut_new_particles();
+
+		for(auto i = working_range.first; i < working_range.second; ++i) {
+			auto& particle1 = new_particles[i];
+			particle1 = old_particles[i];
 
 			for(const auto& rule : params.rules) {
 				if(rule.particle1_color != particle1.color) continue;
@@ -226,7 +207,7 @@ void Simulation::ParticleUpdater::run(const ParticleGrid* particles) {
 				auto ranges = particles->get_ranges_in(relevant_area);
 				for(const auto range : ranges) {
 					for(int i = range.first; i < range.second; ++i) {
-						const auto& particle2 = particles->get_particles()[i];
+						const auto& particle2 = old_particles[i];
 						if(particle1 == particle2) continue;
 						if(rule.particle2_color != particle2.color) continue;
 						execute_rule(rule, particle1, particle2);
@@ -239,15 +220,5 @@ void Simulation::ParticleUpdater::run(const ParticleGrid* particles) {
 		}
 
 		doing_work = false;
-	}
-}
-
-void Simulation::ParticleUpdater::swap_vectors() {
-	if(new_particles == &particle_vec1) {
-		new_particles = &particle_vec2;
-		old_particles = &particle_vec1;
-	} else {
-		new_particles = &particle_vec1;
-		old_particles = &particle_vec2;
 	}
 }
