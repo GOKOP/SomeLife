@@ -85,7 +85,7 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 }
 
 void Simulation::assign_particles() {
-	int count = particles.get_total_particle_count();
+	int count = particles.get_particles().size();
 	int per_thread = count / updaters.size();
 	int counter = 0;
 
@@ -94,7 +94,7 @@ void Simulation::assign_particles() {
 	(*current_updater)->particle_vec1.clear();
 	(*current_updater)->particle_vec2.clear();
 
-	for(const auto& particle : particles) {
+	for(const auto& particle : particles.get_particles()) {
 		(*current_updater)->particle_vec1.push_back(particle);
 		(*current_updater)->particle_vec2.push_back(particle);
 		++counter;
@@ -223,9 +223,10 @@ void Simulation::ParticleUpdater::run(const ParticleGrid* particles) {
 						rule.second_cut * 2,
 						rule.second_cut * 2);
 	
-				auto cells = particles->get_cells_in(relevant_area);
-				for(const auto cell : cells) {
-					for(const auto& particle2 : cell) {
+				auto ranges = particles->get_ranges_in(relevant_area);
+				for(const auto range : ranges) {
+					for(int i = range.first; i < range.second; ++i) {
+						const auto& particle2 = particles->get_particles()[i];
 						if(particle1 == particle2) continue;
 						if(rule.particle2_color != particle2.color) continue;
 						execute_rule(rule, particle1, particle2);
