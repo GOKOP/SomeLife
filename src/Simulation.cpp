@@ -19,13 +19,13 @@ Simulation::Simulation(const Recipe& recipe, int threads):
 	for(const auto& step : recipe.get_steps()) {
 		if(std::holds_alternative<Recipe::Window>(step)) {
 			auto window = std::get<Recipe::Window>(step);
-			params.board_size.x = window.width;
-			params.board_size.y = window.height;
+			board_size.x = window.width;
+			board_size.y = window.height;
 			particles = ParticleGrid({window.width, window.height}, 30);
 		}
 		else if(std::holds_alternative<Recipe::Friction>(step)) {
-			auto friction = std::get<Recipe::Friction>(step);
-			params.friction = friction.value;
+			auto friction_struct = std::get<Recipe::Friction>(step);
+			friction = friction_struct.value;
 		}
 		else if(std::holds_alternative<Recipe::Particles>(step)) {
 			auto parts = std::get<Recipe::Particles>(step);
@@ -45,12 +45,12 @@ const ParticleGrid& Simulation::get_particles() const {
 }
 
 const sf::Vector2i Simulation::get_board_size() const {
-	return params.board_size;
+	return board_size;
 }
 
 void Simulation::add_particle(const Particle& particle) {
 	if(particle.position.x > 0 && particle.position.y > 0 &&
-	   particle.position.x < params.board_size.x && particle.position.y < params.board_size.y) {
+	   particle.position.x < board_size.x && particle.position.y < board_size.y) {
 		particles.insert(particle);
 	}
 }
@@ -60,8 +60,8 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 	auto seed = random_dev();
 
 	std::default_random_engine eng(seed);
-	auto x_dist = std::uniform_real_distribution<float>(0, params.board_size.x);
-	auto y_dist = std::uniform_real_distribution<float>(0, params.board_size.y);
+	auto x_dist = std::uniform_real_distribution<float>(0, board_size.x);
+	auto y_dist = std::uniform_real_distribution<float>(0, board_size.y);
 
 	for(int i=0; i<amount; ++i) {
 		add_particle(Particle({x_dist(eng), y_dist(eng)}, {0, 0}, color));
@@ -69,7 +69,7 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 }
 
 void Simulation::add_rule(const Rule& rule) {
-	params.rules.push_back(rule);
+	rules.push_back(rule);
 }
 
 float Simulation::calculate_force(const Rule& rule, float distance) {
@@ -105,8 +105,8 @@ void Simulation::execute_rule(const Rule& rule, Particle& particle1, const Parti
 }
 
 sf::Vector2f Simulation::apply_friction(sf::Vector2f velocity) {
-	velocity.x *= (1.f - params.friction);
-	velocity.y *= (1.f - params.friction);
+	velocity.x *= (1.f - friction);
+	velocity.y *= (1.f - friction);
 	return velocity;
 }
 
@@ -116,10 +116,10 @@ void Simulation::perform_movement(Particle& particle) {
 	float new_x = particle.position.x + particle.velocity.x;
 	float new_y = particle.position.y + particle.velocity.y;
 
-	if(new_x < 0 || new_x >= params.board_size.x) particle.velocity.x *= -0.5;
+	if(new_x < 0 || new_x >= board_size.x) particle.velocity.x *= -0.5;
 	else particle.position.x = new_x;
 
-	if(new_y < 0 || new_y >= params.board_size.y) particle.velocity.y *= -0.5;
+	if(new_y < 0 || new_y >= board_size.y) particle.velocity.y *= -0.5;
 	else particle.position.y = new_y;
 }
 
@@ -139,7 +139,7 @@ void Simulation::update() {
 		auto& particle1 = new_particles[i];
 		particle1 = old_particles[i];
 
-		for(const auto& rule : params.rules) {
+		for(const auto& rule : rules) {
 			if(rule.particle1_color != particle1.color) continue;
 
 			auto relevant_area = sf::FloatRect(

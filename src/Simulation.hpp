@@ -10,14 +10,9 @@
 #include "Recipe.hpp"
 
 class Simulation {
-
-	struct Params {
-		float friction;
-		sf::Vector2i board_size;
-		std::vector<Rule> rules;
-	};
-
-	Params params;
+	float friction;
+	sf::Vector2i board_size;
+	std::vector<Rule> rules;
 	ParticleGrid particles;
 
 	void add_particle(const Particle& particle);
