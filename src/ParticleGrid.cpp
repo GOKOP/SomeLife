@@ -64,7 +64,6 @@ std::vector<std::pair<std::size_t, std::size_t>> ParticleGrid::get_ranges_in(
 	float previous_y = -1;
 	int range_i = 0;
 
-
 	for(int i=0; i<cell_positions.size(); ++i) {
 		float current_y = (i / grid_size.x) * cell_size.y;
 		if(current_y < y_start) continue;
@@ -116,11 +115,15 @@ void ParticleGrid::sort() {
 
 		if(cell_ord != prev_cell_ord) {
 			for(int j = prev_cell_ord + 1; j <= cell_ord; ++j) {
-				cell_positions[cell_ord] = i;
+				cell_positions[j] = i;
 			}
 		}
 
 		prev_cell_ord = cell_ord;
+	}
+
+	for(int i = prev_cell_ord+1; i < cell_positions.size(); ++i) {
+		cell_positions[i] = particles.size();
 	}
 }
 
