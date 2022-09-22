@@ -20,6 +20,7 @@ Config::Config(const std::string& filename):
 	while(std::getline(file, line_buffer)) {
 		if(line_buffer[0] == '#') continue;
 		if(line_buffer[0] == '\n') continue;
+		if(line_buffer[0] == '\0') continue;
 
 		auto keyval = line_to_keyvalue(line_buffer);
 
@@ -65,7 +66,7 @@ std::optional<int> Config::string_to_positive_int(const std::string& str) {
 		if(pos != str.size()) return std::nullopt;
 	} catch(std::invalid_argument&) { return std::nullopt; }
 	
-	if(res <= 0) return std::nullopt;
+	if(res < 0) return std::nullopt;
 	return res;
 }
 

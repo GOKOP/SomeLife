@@ -7,6 +7,7 @@ It's somewhat inspired by [this video](https://www.youtube.com/watch?v=Z_zmZ23gr
 ## Build
 
 This program depends on the SFML graphical library and uses CMake for the build process.
+It uses OpenMP for parallelism so make sure your compiler supports it; otherwise everything will run on a single thread.
 Note that directories `res` and `recipes` talked about in the "Usage" section are copied to the build directory for convenience.
 
 ### Linux

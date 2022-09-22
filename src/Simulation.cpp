@@ -1,7 +1,7 @@
 #include "Simulation.hpp"
 #include <random>
 #include <cmath>
-#include <thread>
+#include <omp.h>
 
 float lerp(float x, float y, float where) {
 	return where * (y - x) + x;
@@ -14,11 +14,7 @@ void float_bandaid(float& val) {
 Simulation::Simulation(const Recipe& recipe, int threads):
 	particles({0, 0}, 1)
 {
-	for(int i=0; i<threads; ++i) {
-		updaters.push_back(new ParticleUpdater(params));
-		std::thread th(&ParticleUpdater::run, updaters.back(), &particles);
-		th.detach();
-	}
+	if(threads != 0) omp_set_num_threads(threads);
 
 	for(const auto& step : recipe.get_steps()) {
 		if(std::holds_alternative<Recipe::Window>(step)) {
@@ -42,19 +38,6 @@ Simulation::Simulation(const Recipe& recipe, int threads):
 	}
 
 	particles.init_new_with_old();
-	assign_ranges();
-}
-
-Simulation::~Simulation() {
-	for(auto updater : updaters) {
-		std::unique_lock<std::mutex> lock(updater->mutex);
-		updater->program_finished = true;
-		updater->doing_work = true;
-		updater->waiter.notify_one();
-		lock.unlock();
-		lock.lock();
-		delete updater;
-	}
 }
 
 const ParticleGrid& Simulation::get_particles() const {
@@ -85,22 +68,11 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 	}
 }
 
-void Simulation::assign_ranges() {
-	int count = particles.get_particles().size();
-	int per_thread = count / updaters.size();
-	int counter = 0;
-
-	for(int i=0; i<updaters.size(); ++i) {
-		if(i == updaters.size() - 1) updaters[i]->working_range = {i * per_thread, count};
-		else updaters[i]->working_range = {i * per_thread, i * per_thread + per_thread};
-	}
-}
-
 void Simulation::add_rule(const Rule& rule) {
 	params.rules.push_back(rule);
 }
 
-float Simulation::ParticleUpdater::calculate_force(const Rule& rule, float distance) {
+float Simulation::calculate_force(const Rule& rule, float distance) {
 	float large_value = 1;
 
 	if(distance > rule.second_cut) return 0;
@@ -115,7 +87,7 @@ float Simulation::ParticleUpdater::calculate_force(const Rule& rule, float dista
 	return lerp(rule.peak, 0, distance / (rule.second_cut - rule.first_cut));
 }
 
-void Simulation::ParticleUpdater::execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2) {
+void Simulation::execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2) {
 	float distance_x = particle1.position.x - particle2.position.x;
 	float distance_y = particle1.position.y - particle2.position.y;
 	float distance = std::sqrt(distance_x*distance_x + distance_y*distance_y);
@@ -132,13 +104,13 @@ void Simulation::ParticleUpdater::execute_rule(const Rule& rule, Particle& parti
 	particle1.velocity.y += force_y;
 }
 
-sf::Vector2f Simulation::ParticleUpdater::apply_friction(sf::Vector2f velocity) {
+sf::Vector2f Simulation::apply_friction(sf::Vector2f velocity) {
 	velocity.x *= (1.f - params.friction);
 	velocity.y *= (1.f - params.friction);
 	return velocity;
 }
 
-void Simulation::ParticleUpdater::perform_movement(Particle& particle) {
+void Simulation::perform_movement(Particle& particle) {
 	particle.velocity = apply_friction(particle.velocity);
 
 	float new_x = particle.position.x + particle.velocity.x;
@@ -151,7 +123,7 @@ void Simulation::ParticleUpdater::perform_movement(Particle& particle) {
 	else particle.position.y = new_y;
 }
 
-void Simulation::ParticleUpdater::fix_particle(Particle& particle) {
+void Simulation::fix_particle(Particle& particle) {
 	float_bandaid(particle.position.x);
 	float_bandaid(particle.position.y);
 	float_bandaid(particle.velocity.x);
@@ -159,66 +131,37 @@ void Simulation::ParticleUpdater::fix_particle(Particle& particle) {
 }
 
 void Simulation::update() {
-	if(updaters.empty()) return;
+	const auto& old_particles = particles.get_particles();
+	auto& new_particles = particles.get_mut_new_particles();
 
-	for(auto updater : updaters) {
-		while(updater->doing_work);
+	#pragma omp parallel for
+	for(int i=0; i<new_particles.size(); ++i) {
+		auto& particle1 = new_particles[i];
+		particle1 = old_particles[i];
+
+		for(const auto& rule : params.rules) {
+			if(rule.particle1_color != particle1.color) continue;
+
+			auto relevant_area = sf::FloatRect(
+					particle1.position.x - rule.second_cut,
+					particle1.position.y - rule.second_cut,
+					rule.second_cut * 2,
+					rule.second_cut * 2);
+
+			auto ranges = particles.get_ranges_in(relevant_area);
+			for(const auto range : ranges) {
+				for(int j = range.first; j < range.second; ++j) {
+					const auto& particle2 = old_particles[j];
+					if(particle1 == particle2) continue;
+					if(rule.particle2_color != particle2.color) continue;
+					execute_rule(rule, particle1, particle2);
+				}
+			}
+		}
+
+		perform_movement(particle1);
 	}
 
 	particles.swap_vecs();
 	particles.sort();
-
-	for(auto updater : updaters) {
-		std::unique_lock<std::mutex> lock(updater->mutex);
-		updater->doing_work = true;
-		updater->waiter.notify_one();
-	}
-}
-
-Simulation::ParticleUpdater::ParticleUpdater(const Params& params): 
-	working_range{0, 0},
-	doing_work(false),
-	program_finished(false),
-	params(params)
-{}
-
-void Simulation::ParticleUpdater::run(ParticleGrid* particles) {
-	std::unique_lock<std::mutex> lock(mutex);
-	while(true) {
-		waiter.wait(lock, [&]{ return doing_work ? true : false; });
-		if(program_finished) return;
-
-		const auto& old_particles = particles->get_particles();
-		auto& new_particles = particles->get_mut_new_particles();
-
-		for(auto i = working_range.first; i < working_range.second; ++i) {
-			auto& particle1 = new_particles[i];
-			particle1 = old_particles[i];
-
-			for(const auto& rule : params.rules) {
-				if(rule.particle1_color != particle1.color) continue;
-	
-				auto relevant_area = sf::FloatRect(
-						particle1.position.x - rule.second_cut,
-						particle1.position.y - rule.second_cut,
-						rule.second_cut * 2,
-						rule.second_cut * 2);
-	
-				auto ranges = particles->get_ranges_in(relevant_area);
-				for(const auto range : ranges) {
-					for(int i = range.first; i < range.second; ++i) {
-						const auto& particle2 = old_particles[i];
-						if(particle1 == particle2) continue;
-						if(rule.particle2_color != particle2.color) continue;
-						execute_rule(rule, particle1, particle2);
-					}
-				}
-			}
-
-			perform_movement(particle1);
-			fix_particle(particle1);
-		}
-
-		doing_work = false;
-	}
 }

@@ -17,41 +17,21 @@ class Simulation {
 		std::vector<Rule> rules;
 	};
 
-	// for threading; `run()` is supposed to be launched in a separate thread
-	// writing to any field should be preceeded by acquiring a lock on `mutex`
-	// `doing_work` should be set to true from outside the thread
-	struct ParticleUpdater {
-		std::pair<std::size_t, std::size_t> working_range;
-
-		std::atomic<bool> doing_work;
-		std::atomic<bool> program_finished;
-		const Params& params;
-
-		std::mutex mutex;
-		std::condition_variable waiter;
-
-		ParticleUpdater(const Params& params);
-
-		float calculate_force(const Rule& rule, float distance);
-		sf::Vector2f apply_friction(sf::Vector2f velocity);
-		void execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2);
-		void perform_movement(Particle& particle);
-		void fix_particle(Particle& particle);
-		void run(ParticleGrid* particles);
-	};
-
 	Params params;
 	ParticleGrid particles;
-	std::vector<ParticleUpdater*> updaters;
 
 	void add_particle(const Particle& particle);
 	void add_random_particles(int amount, sf::Color color);
 	void add_rule(const Rule& rule);
-	void assign_ranges();
+
+	float calculate_force(const Rule& rule, float distance);
+	sf::Vector2f apply_friction(sf::Vector2f velocity);
+	void execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2);
+	void perform_movement(Particle& particle);
+	void fix_particle(Particle& particle);
 
 public:
 	Simulation(const Recipe& recipe, int threads);
-	~Simulation();
 
 	const ParticleGrid& get_particles() const;
 	const sf::Vector2i get_board_size() const;
