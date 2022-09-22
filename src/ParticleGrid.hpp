@@ -5,6 +5,17 @@
 #include <SFML/System.hpp>
 #include "Particle.hpp"
 
+/* Ok so it's actually a bit weird grid implementation;
+ * all particles are stored in a single vector which is sorted
+ * based on what grid cell does a particle belong to.
+ * Positions in that vector where the grid cells start are stored in another vector.
+ * This is certainly weird but when I was designing it I hoped it would somehow enable me to
+ * leverage the GPU to do the work of updating the particles.
+ * Now I'm not sure if it does, but I didn't look into it too much yet so I'm leaving it
+ * just in case it will turn out useful when I do.
+ * It's certainly better performing than my terrible quad tree implementation tho
+ */
+
 class ParticleGrid {
 	struct CompareByGridCell {
 		int grid_width;
