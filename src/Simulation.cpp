@@ -1,7 +1,11 @@
 #include "Simulation.hpp"
 #include <random>
 #include <cmath>
-#include <omp.h>
+
+#if __has_include(<omp.h>)
+	#define OMP_PRESENT
+	#include <omp.h>
+#endif
 
 float lerp(float x, float y, float where) {
 	return where * (y - x) + x;
@@ -14,7 +18,9 @@ void float_bandaid(float& val) {
 Simulation::Simulation(const Recipe& recipe, int threads):
 	particles({0, 0}, 1)
 {
-	if(threads != 0) omp_set_num_threads(threads);
+	#ifdef OMP_PRESENT
+		if(threads != 0) omp_set_num_threads(threads);
+	#endif
 
 	for(const auto& step : recipe.get_steps()) {
 		if(std::holds_alternative<Recipe::Window>(step)) {
