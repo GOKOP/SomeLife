@@ -11,6 +11,10 @@ add_executable(somelife ${SOURCES})
 set_target_properties(somelife PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED 17)
 target_link_libraries(somelife sfml-graphics)
 
+if(NOT MSVC)
+	target_compile_options(somelife PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 if(OpenMP_CXX_FOUND)
 	target_link_libraries(somelife OpenMP::OpenMP_CXX)
 endif()
