@@ -141,7 +141,7 @@ void Simulation::update() {
 	auto& new_particles = particles.get_mut_new_particles();
 
 	#pragma omp parallel for
-	for(int i=0; i<new_particles.size(); ++i) {
+	for(std::size_t i=0; i<new_particles.size(); ++i) {
 		auto& particle1 = new_particles[i];
 		particle1 = old_particles[i];
 
@@ -155,8 +155,8 @@ void Simulation::update() {
 					rule.second_cut * 2);
 
 			auto ranges = particles.get_ranges_in(relevant_area);
-			for(const auto range : ranges) {
-				for(int j = range.first; j < range.second; ++j) {
+			for(const auto& range : ranges) {
+				for(std::size_t j = range.first; j < range.second; ++j) {
 					const auto& particle2 = old_particles[j];
 					if(particle1 == particle2) continue;
 					if(rule.particle2_color != particle2.color) continue;

@@ -33,7 +33,7 @@ void ParticleGrid::insert(const Particle& particle) {
 	auto& particles = get_mut_particles();
 
 	auto it = particles.begin();
-	for(it; it != particles.end(); ++it) {
+	for(; it != particles.end(); ++it) {
 		if(compare(particle, *it)) break;
 	}
 
@@ -41,9 +41,9 @@ void ParticleGrid::insert(const Particle& particle) {
 
 	int cell_x = floor(particle.position.x / cell_size.x);
 	int cell_y = floor(particle.position.y / cell_size.y);
-	int cell_n = cell_y * grid_size.x + cell_x;
+	std::size_t cell_n = cell_y * grid_size.x + cell_x;
 
-	for(int i=0; i < cell_positions.size(); ++i) {
+	for(std::size_t i=0; i < cell_positions.size(); ++i) {
 		if(i > cell_n) ++cell_positions[i];
 	}
 }
@@ -52,8 +52,7 @@ std::vector<std::pair<std::size_t, std::size_t>> ParticleGrid::get_ranges_in(
 		sf::FloatRect area
 ) const {
 	float y_start = floor(area.top / cell_size.y) * cell_size.y;
-	int y_cells = ceil((area.height + area.top - y_start) / cell_size.y);
-	float y_end = y_start + y_cells * cell_size.y;
+	std::size_t y_cells = ceil((area.height + area.top - y_start) / cell_size.y);
 
 	float x_start = floor(area.left / cell_size.x) * cell_size.x;
 	float x_cells = ceil((area.width + area.left - x_start) / cell_size.x);
@@ -62,9 +61,9 @@ std::vector<std::pair<std::size_t, std::size_t>> ParticleGrid::get_ranges_in(
 	std::vector<std::pair<std::size_t, std::size_t>> res(y_cells, {0, 0});
 
 	float previous_y = -1;
-	int range_i = 0;
+	std::size_t range_i = 0;
 
-	for(int i=0; i<cell_positions.size(); ++i) {
+	for(std::size_t i=0; i<cell_positions.size(); ++i) {
 		float current_y = (i / grid_size.x) * cell_size.y;
 		if(current_y < y_start) continue;
 
@@ -80,7 +79,7 @@ std::vector<std::pair<std::size_t, std::size_t>> ParticleGrid::get_ranges_in(
 			previous_y = current_y;
 		}
 	}
-	if(range_i >= 0 && range_i < res.size() && res[range_i].second == 0) {
+	if(range_i < res.size() && res[range_i].second == 0) {
 		res[range_i].second = get_particles().size();
 	}
 
@@ -95,9 +94,9 @@ void ParticleGrid::remove(const Particle& particle) {
 
 	int cell_x = floor(particle.position.x / cell_size.x);
 	int cell_y = floor(particle.position.y / cell_size.y);
-	int cell_n = cell_y * grid_size.x + cell_x;
+	std::size_t cell_n = cell_y * grid_size.x + cell_x;
 
-	for(int i=0; i < cell_positions.size(); ++i) {
+	for(std::size_t i=0; i < cell_positions.size(); ++i) {
 		if(i > cell_n) --cell_positions[i];
 	}
 }
@@ -108,7 +107,7 @@ void ParticleGrid::sort() {
 
 	// regenerate cell positions
 	int prev_cell_ord = -1;
-	for(int i=0; i<particles.size(); ++i) {
+	for(std::size_t i=0; i<particles.size(); ++i) {
 		int cell_x = particles[i].position.x / cell_size.x;
 		int cell_y = particles[i].position.y / cell_size.y;
 		int cell_ord = grid_size.x * cell_y + cell_x;
@@ -122,7 +121,7 @@ void ParticleGrid::sort() {
 		prev_cell_ord = cell_ord;
 	}
 
-	for(int i = prev_cell_ord+1; i < cell_positions.size(); ++i) {
+	for(std::size_t i = prev_cell_ord+1; i < cell_positions.size(); ++i) {
 		cell_positions[i] = particles.size();
 	}
 }
