@@ -4,3 +4,6 @@ build
 .vs
 out
 CMakeSettings.json
+
+# coc.nvim/clangd stuff
+.cache

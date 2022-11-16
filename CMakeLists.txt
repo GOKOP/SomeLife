@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(SomeLife)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 find_package(OpenMP)
 
