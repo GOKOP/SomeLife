@@ -21,8 +21,6 @@ private:
 
 	std::vector<std::string> line_to_words(const std::string& line);
 	std::optional<sf::Color> string_to_color(const std::string& str);
-	std::optional<int> stoi(const std::string& str);
-	std::optional<float> stof(const std::string& str);
 
 	std::optional<Step> load_window(const std::vector<std::string>& words);
 	std::optional<Step> load_friction(const std::vector<std::string>& words);

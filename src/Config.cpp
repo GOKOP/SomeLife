@@ -2,6 +2,8 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "strutil.hpp"
+
 Config::Config():
 	target_fps(default_fps),
 	threads(default_threads)
@@ -29,9 +31,9 @@ Config::Config(const std::string& filename):
 			continue;
 		}
 
-		auto maybe_value = string_to_positive_int(keyval.second);
+		auto maybe_value = strutil::stoi_nonegative(keyval.second);
 		if(!maybe_value.has_value()) {
-			errors += std::string("Must be a positive integer: \"") + keyval.second + "\"\n";
+			errors += std::string("Must be a non-negative integer: \"") + keyval.second + "\"\n";
 			continue;
 		}
 		int value = maybe_value.value();
@@ -55,19 +57,6 @@ std::pair<std::string, std::string> Config::line_to_keyvalue(const std::string& 
 	}
 
 	return {key, value};
-}
-
-std::optional<int> Config::string_to_positive_int(const std::string& str) {
-	int res;
-
-	try {
-		std::size_t pos;
-		res = std::stoi(str, &pos);
-		if(pos != str.size()) return std::nullopt;
-	} catch(std::invalid_argument&) { return std::nullopt; }
-	
-	if(res < 0) return std::nullopt;
-	return res;
 }
 
 int Config::get_target_fps() const {

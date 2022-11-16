@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <fstream>
 
+#include "strutil.hpp"
+
 Recipe::Recipe(const std::string& filename) {
 	load(filename);
 }
@@ -34,35 +36,13 @@ std::optional<sf::Color> Recipe::string_to_color(const std::string& str) {
 	return std::nullopt;
 }
 
-std::optional<int> Recipe::stoi(const std::string& str) {
-	try {
-		std::size_t index = 0;
-		int res = std::stoi(str, &index);
-		if(index != str.size()) return std::nullopt;
-		return res;
-	} catch(std::invalid_argument&) {
-		return std::nullopt;
-	}
-}
-
-std::optional<float> Recipe::stof(const std::string& str) {
-	try {
-		std::size_t index = 0;
-		float res = std::stof(str, &index);
-		if(index != str.size()) return std::nullopt;
-		return res;
-	} catch(std::invalid_argument&) {
-		return std::nullopt;
-	}
-}
-
 std::optional<Recipe::Step> Recipe::load_friction(const std::vector<std::string>& words) {
 	if(words.size() != 2) {
 		errors += "Invalid number of arguments for `friction` (1 expected)\n";
 		return std::nullopt;
 	}
 
-	auto maybe_value = stof(words[1]);
+	auto maybe_value = strutil::stof(words[1]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[1] + "\" is not a floating point number\n";
 		return std::nullopt;
@@ -86,7 +66,7 @@ std::optional<Recipe::Step> Recipe::load_particles(const std::vector<std::string
 	}
 	sf::Color color = maybe_color.value();
 
-	auto maybe_amount = stoi(words[2]);
+	auto maybe_amount = strutil::stoi(words[2]);
 	if(!maybe_amount.has_value()) {
 		errors += std::string("\"") + words[2] + "\" is not a valid integer number\n";
 		return std::nullopt;
@@ -116,21 +96,21 @@ std::optional<Recipe::Step> Recipe::load_rule(const std::vector<std::string>& wo
 	}
 	sf::Color color2 = maybe_color.value();
 
-	auto maybe_value = stof(words[3]);
+	auto maybe_value = strutil::stof(words[3]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[3] + "\" is not a floating point number\n";
 		return std::nullopt;
 	}
 	float first_cut = maybe_value.value();
 
-	maybe_value = stof(words[4]);
+	maybe_value = strutil::stof(words[4]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[4] + "\" is not a floating point number\n";
 		return std::nullopt;
 	}
 	float second_cut = maybe_value.value();
 
-	maybe_value = stof(words[5]);
+	maybe_value = strutil::stof(words[5]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[5] + "\" is not a floating point number\n";
 		return std::nullopt;
@@ -146,14 +126,14 @@ std::optional<Recipe::Step> Recipe::load_window(const std::vector<std::string>& 
 		return std::nullopt;
 	}
 
-	auto maybe_value = stoi(words[1]);
+	auto maybe_value = strutil::stoi(words[1]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[1] + "\" is not a floating point number\n";
 		return std::nullopt;
 	}
 	int width = maybe_value.value();
 
-	maybe_value = stoi(words[2]);
+	maybe_value = strutil::stoi(words[2]);
 	if(!maybe_value.has_value()) {
 		errors += std::string("\"") + words[2] + "\" is not a floating point number\n";
 		return std::nullopt;

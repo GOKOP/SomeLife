@@ -13,7 +13,6 @@ class Config {
 	std::string errors;
 
 	std::pair<std::string, std::string> line_to_keyvalue(const std::string& line);
-	std::optional<int> string_to_positive_int(const std::string& str);
 
 public:
 
