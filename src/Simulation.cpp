@@ -182,6 +182,6 @@ void Simulation::init_recording(std::ofstream& out) const {
 
 void Simulation::record(std::ofstream& out) const {
 	for(const auto& particle : particles.get_particles()) {
-		out << particle;
+		out.write(reinterpret_cast<const char*>(&particle), sizeof(Particle));
 	}
 }
