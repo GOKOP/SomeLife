@@ -39,15 +39,25 @@ Vcpkg seems to install x86 libraries by default, so unless you're going to compi
 
 ## Usage
 
-SomeLife is designed to be run from the terminal:
+SomeLife is designed to be run from the terminal; it has several options.
+Basic usage is as follows:
 
 ```
-./somelife path-to-recipe
+./somelife --recipe path-to-recipe
 ```
 
 Where `path-to-recipe` is the path to a "recipe" file defining simulation setup.
 Example recipes can be found in the "recipes" directory.
 The directory that SomeLife is run from should contain the `res` directory.
+
+Additional possible options are:
+
+- `--record path-to-record-file` – records the simulation. It can be replayed later with `--replay`.
+- `--replay path-to-record-file` – replays a recorded simulation.
+- `--framerate positive-integer` – sets target framerate. Takes precedence over the config file.
+
+To run the program successfully you must set either `--recipe` or `--replay`.
+Additionally, options `--recipe` and `--replay`, or options `--record` and `--replay` can't be used together.
 
 ### Recipe files
 
