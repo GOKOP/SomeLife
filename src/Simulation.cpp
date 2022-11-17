@@ -1,6 +1,7 @@
 #include "Simulation.hpp"
 #include <random>
 #include <cmath>
+#include <fstream>
 
 #if __has_include(<omp.h>)
 	#define OMP_PRESENT
@@ -170,4 +171,15 @@ void Simulation::update() {
 
 	particles.swap_vecs();
 	particles.sort();
+}
+
+void Simulation::init_recording(std::ofstream& out) const {
+	std::size_t particle_count = particles.get_particles().size();
+	out.write(reinterpret_cast<char*>(&particle_count), sizeof(std::size_t));
+}
+
+void Simulation::record(std::ofstream& out) const {
+	for(const auto& particle : particles.get_particles()) {
+		out << particle;
+	}
 }

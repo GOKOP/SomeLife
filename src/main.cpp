@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <fstream>
 #include "Display.hpp"
 #include "Simulation.hpp"
 #include "Config.hpp"
@@ -44,6 +45,13 @@ int main(int argc, const char* argv[]) {
 
 	auto last_frame_time = steady_clock::now();
 
+	auto record_stream = std::ofstream();
+	if(arg_config.get_recording_state() == ArgumentConfig::RecordingState::Recording) {
+		record_stream.open(arg_config.get_recording_path().data(), std::ios::binary);
+		if(record_stream.good()) simulation.init_recording(record_stream);
+		else std::cout << "Failed to open file: " + std::string(arg_config.get_recording_path()) + "; cannot record the simulation.\n";
+	}
+
 	while(display.window_is_open()) {
 		display.handle_events();
 
@@ -56,6 +64,7 @@ int main(int argc, const char* argv[]) {
 		if(delta_us != 0) framerate = 1000000 / delta_us;
 
 		simulation.update();
+		if(record_stream.is_open() && record_stream.good()) simulation.record(record_stream);
 		display.draw_window(simulation.get_particles(), framerate);
 	}
 }

@@ -32,4 +32,6 @@ public:
 	const sf::Vector2i get_board_size() const;
 
 	void update();
+	void init_recording(std::ofstream& out) const;
+	void record(std::ofstream& out) const;
 };
