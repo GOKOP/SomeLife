@@ -21,5 +21,6 @@ public:
 	bool window_is_open() const;
 
 	void draw_window(const ParticleGrid& particles, int framerate);
+	void draw_window(const std::vector<Particle>& particles, int framerate);
 	void handle_events();
 };
