@@ -4,7 +4,7 @@
 
 #include "strutil.hpp"
 
-Recipe::Recipe(const std::string& filename) {
+Recipe::Recipe(std::string_view filename) {
 	load(filename);
 }
 
@@ -143,13 +143,13 @@ std::optional<Recipe::Step> Recipe::load_window(const std::vector<std::string>& 
 	return Window { width, height };
 }
 
-const std::string& Recipe::load(const std::string& filename) {
+const std::string& Recipe::load(std::string_view filename) {
 	errors = "";
 	steps.clear();
 
-	std::ifstream file(filename);
+	std::ifstream file(filename.data());
 	if(!file.is_open()) {
-		errors += std::string("Can't open file: ") + filename + "\n";
+		errors += "Can't open file: " + std::string(filename) + "\n";
 		return errors;
 	}
 

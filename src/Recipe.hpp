@@ -28,9 +28,9 @@ private:
 	std::optional<Step> load_rule(const std::vector<std::string>& words);
 
 public:
-	Recipe(const std::string& filename);
+	Recipe(std::string_view filename);
 
-	const std::string& load(const std::string& filename);
+	const std::string& load(std::string_view filename);
 	const std::string& get_errors() const;
 	const std::vector<Step>& get_steps() const;
 };

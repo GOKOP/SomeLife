@@ -3,14 +3,16 @@
 #include "Display.hpp"
 #include "Simulation.hpp"
 #include "Config.hpp"
+#include "ArgumentConfig.hpp"
 
 using namespace std::chrono;
 
-int main(int argc, char* argv[]) {
-	if(argc != 2) {
-		std::cout << "Usage:\n";
-		std::cout << argv[0] << " path-to-recipe-file\n";
-		return 1;
+int main(int argc, const char* argv[]) {
+	ArgumentConfig arg_config(argc, argv);
+	if(!arg_config.get_errors().empty()) {
+		std::cout << "Errors reading command line arguments:\n";
+		std::cout << arg_config.get_errors();
+		exit(1);
 	}
 
 	Config config("res/somelife.conf");
@@ -22,19 +24,23 @@ int main(int argc, char* argv[]) {
 		std::cout << "threads=" << config.get_threads() << "\n\n";
 	}
 
-	auto recipe = Recipe(argv[1]);
+	auto recipe = Recipe(arg_config.get_recipe_path());
 	if(!recipe.get_errors().empty()) {
 		std::cout << "Error loading \"" << argv[1] << "\":\n";
 		std::cout << recipe.get_errors();
 		return 1;
 	}
 
+	int target_fps;
+	if(arg_config.get_framerate() > 0) target_fps = arg_config.get_framerate();
+	else target_fps = config.get_target_fps();
+
 	Simulation simulation(recipe, config.get_threads());
 	Display display(
 			simulation.get_board_size().x,
 			simulation.get_board_size().y,
 			"Life?",
-			config.get_target_fps());
+			target_fps);
 
 	auto last_frame_time = steady_clock::now();
 
