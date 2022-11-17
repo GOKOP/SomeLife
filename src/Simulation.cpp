@@ -175,7 +175,9 @@ void Simulation::update() {
 
 void Simulation::init_recording(std::ofstream& out) const {
 	std::size_t particle_count = particles.get_particles().size();
-	out.write(reinterpret_cast<char*>(&particle_count), sizeof(std::size_t));
+	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(std::size_t));
 }
 
 void Simulation::record(std::ofstream& out) const {
