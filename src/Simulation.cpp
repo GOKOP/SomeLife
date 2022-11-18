@@ -142,7 +142,7 @@ void Simulation::update() {
 	auto& new_particles = particles.get_mut_new_particles();
 
 	#pragma omp parallel for
-	for(std::size_t i=0; i<new_particles.size(); ++i) {
+	for(int i=0; i<new_particles.size(); ++i) {
 		auto& particle1 = new_particles[i];
 		particle1 = old_particles[i];
 
