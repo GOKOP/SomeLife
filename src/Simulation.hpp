@@ -10,6 +10,7 @@
 #include "Recipe.hpp"
 
 class Simulation {
+	bool cpu_is_big_endian; // for recording
 	float friction;
 	sf::Vector2i board_size;
 	std::vector<Rule> rules;
@@ -26,7 +27,7 @@ class Simulation {
 	void fix_particle(Particle& particle);
 
 public:
-	Simulation(const Recipe& recipe, int threads);
+	Simulation(const Recipe& recipe, int threads, bool cpu_is_big_endian);
 
 	const ParticleGrid& get_particles() const;
 	const sf::Vector2i get_board_size() const;

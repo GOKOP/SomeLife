@@ -1,7 +1,9 @@
 #include "Replayer.hpp"
 #include <array>
 
-Replayer::Replayer(std::string_view recording_file) {
+Replayer::Replayer(std::string_view recording_file, bool cpu_is_big_endian):
+	cpu_is_big_endian(cpu_is_big_endian)
+{
 	file_input.open(recording_file.data(), std::ios::binary);
 	if(!file_input.good()) return;
 
@@ -30,6 +32,14 @@ void Replayer::next_frame() {
 	if(!file_input.good() || file_input.eof()) return;
 
 	for(std::size_t i=0; i<particles.size(); ++i) {
-		file_input.read(reinterpret_cast<char*>(&particles[i]), sizeof(Particle));
+		// the file should be little endian (reading in reverse not tested)
+		if(cpu_is_big_endian) {
+			auto* ptr = reinterpret_cast<char*>(&particles[i]);
+			for(int i = sizeof(Particle) - 1; i >= 0; --i) {
+				file_input.read(ptr + i, 1);
+			}
+		} else {
+			file_input.read(reinterpret_cast<char*>(&particles[i]), sizeof(Particle));
+		}
 	}
 }

@@ -16,7 +16,8 @@ void float_bandaid(float& val) {
 	if(std::isnan(val) || std::isinf(val)) val = 0;
 }
 
-Simulation::Simulation(const Recipe& recipe, int threads):
+Simulation::Simulation(const Recipe& recipe, int threads, bool cpu_is_big_endian):
+	cpu_is_big_endian(cpu_is_big_endian),
 	particles({0, 0}, 1)
 {
 	#ifdef OMP_PRESENT
@@ -175,13 +176,21 @@ void Simulation::update() {
 
 void Simulation::init_recording(std::ofstream& out) const {
 	std::size_t particle_count = particles.get_particles().size();
-	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(int));
-	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(int));
-	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(std::size_t));
+	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(sf::Int32));
+	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(sf::Int32));
+	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(sf::Int32));
 }
 
 void Simulation::record(std::ofstream& out) const {
 	for(const auto& particle : particles.get_particles()) {
-		out.write(reinterpret_cast<const char*>(&particle), sizeof(Particle));
+		if(cpu_is_big_endian) {
+			// convert to little endian (not tested)
+			auto* ptr = reinterpret_cast<const char*>(&particle);
+			for(int i = sizeof(Particle) - 1; i >= 0; --i) {
+				out.write(ptr + i, 1);
+			}
+		} else {
+			out.write(reinterpret_cast<const char*>(&particle), sizeof(Particle));
+		}
 	}
 }
