@@ -13,7 +13,7 @@ Replayer::Replayer(std::string_view recording_file, bool cpu_is_big_endian):
 	file_input.read(reinterpret_cast<char*>(&board_size.y), sizeof(int));
 	file_input.read(reinterpret_cast<char*>(&particle_count), sizeof(std::size_t));
 
-	particles.resize(particle_count, Particle({0, 0}, {0, 0}, sf::Color::Black));
+	particles.resize(particle_count, Particle{{0, 0}, {0, 0}, {0, 0, 0}});
 }
 
 bool Replayer::is_good() const {

@@ -15,7 +15,7 @@ bool cpu_is_big_endian() {
 	return *ptr == 0;
 }
 
-bool run_simulation(const Config& config, const ArgumentConfig& arg_config, int target_fps) {
+bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 	auto recipe = Recipe(arg_config.get_recipe_path());
 	if(!recipe.get_errors().empty()) {
 		std::cout << "Error loading \"" << arg_config.get_recipe_path() << "\":\n";
@@ -23,7 +23,7 @@ bool run_simulation(const Config& config, const ArgumentConfig& arg_config, int 
 		return false;
 	}
 
-	Simulation simulation(recipe, config.get_threads(), cpu_is_big_endian());
+	Simulation simulation(recipe, cpu_is_big_endian());
 	Display display(
 			simulation.get_board_size().x,
 			simulation.get_board_size().y,
@@ -117,7 +117,7 @@ int main(int argc, const char* argv[]) {
 	if(arg_config.get_recording_state() == ArgumentConfig::RecordingState::Replaying) {
 		success = run_replay(arg_config, target_fps);
 	} else {
-		success = run_simulation(config, arg_config, target_fps);
+		success = run_simulation(arg_config, target_fps);
 	}
 
 	if(success) return EXIT_SUCCESS;

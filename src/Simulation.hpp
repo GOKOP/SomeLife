@@ -2,34 +2,25 @@
 
 #include <vector>
 #include <string>
-#include <mutex>
-#include <atomic>
 #include <utility>
-#include <condition_variable>
-#include "ParticleGrid.hpp"
 #include "Recipe.hpp"
+#include "OpenClRunner.hpp"
 
 class Simulation {
 	bool cpu_is_big_endian; // for recording
-	float friction;
 	sf::Vector2i board_size;
 	std::vector<Rule> rules;
-	ParticleGrid particles;
+	std::vector<Particle> particles;
+	OpenClRunner runner;
 
 	void add_particle(const Particle& particle);
 	void add_random_particles(int amount, sf::Color color);
 	void add_rule(const Rule& rule);
 
-	float calculate_force(const Rule& rule, float distance);
-	sf::Vector2f apply_friction(sf::Vector2f velocity);
-	void execute_rule(const Rule& rule, Particle& particle1, const Particle& particle2);
-	void perform_movement(Particle& particle);
-	void fix_particle(Particle& particle);
-
 public:
-	Simulation(const Recipe& recipe, int threads, bool cpu_is_big_endian);
+	Simulation(const Recipe& recipe, bool cpu_is_big_endian);
 
-	const ParticleGrid& get_particles() const;
+	const std::vector<Particle>& get_particles() const;
 	const sf::Vector2i get_board_size() const;
 
 	void update();

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "ParticleGrid.hpp"
+#include <vector>
+#include <Particle.hpp>
 
 #define POINT_RADIUS 2
-
 
 class Display {
 	sf::RenderWindow window;
@@ -20,7 +20,6 @@ public:
 	const sf::RenderWindow& get_window() const;
 	bool window_is_open() const;
 
-	void draw_window(const ParticleGrid& particles, int framerate);
 	void draw_window(const std::vector<Particle>& particles, int framerate);
 	void handle_events();
 };

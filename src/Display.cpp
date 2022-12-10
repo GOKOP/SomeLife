@@ -37,15 +37,13 @@ void Display::print_framerate(int framerate) {
 	window.draw(text);
 }
 
-void Display::draw_window(const ParticleGrid& particles, int framerate) {
-	draw_window(particles.get_particles(), framerate);
-}
-
 void Display::draw_window(const std::vector<Particle>& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
 	for(const auto& particle : particles) {
-		draw_point(particle.position, particle.color);
+		draw_point(
+			{particle.position.x, particle.position.y}, 
+			sf::Color(particle.color.x, particle.color.y, particle.color.z));
 	}
 
 	print_framerate(framerate);

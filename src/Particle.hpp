@@ -1,14 +1,10 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#define CL_HPP_TARGET_OPENCL_VERSION 300
+#include <CL/opencl.hpp>
 
 struct Particle {
-	sf::Vector2f position;
-	sf::Vector2f velocity;
-	sf::Color color;
-
-	Particle(sf::Vector2f position, sf::Vector2f velocity, sf::Color color);
+	cl_float2 position;
+	cl_float2 velocity;
+	cl_uchar3 color;
 };
-
-bool operator==(const Particle& left, const Particle& right);
-bool operator!=(const Particle& left, const Particle& right);
