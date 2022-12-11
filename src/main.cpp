@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include "Display.hpp"
 #include "Simulation.hpp"
 #include "Config.hpp"
@@ -48,7 +49,7 @@ bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 
 		int framerate = 0;
 		int delta_us = duration_cast<microseconds>(delta_time).count();
-		if(delta_us != 0) framerate = 1000000 / delta_us;
+		if(delta_us != 0) framerate = std::round(1'000'000.f / delta_us);
 
 		simulation.update();
 		if(record_stream.is_open() && record_stream.good()) simulation.record(record_stream);
@@ -82,7 +83,7 @@ bool run_replay(ArgumentConfig arg_config, int target_fps) {
 
 		int framerate = 0;
 		int delta_us = duration_cast<microseconds>(delta_time).count();
-		if(delta_us != 0) framerate = 1000000 / delta_us;
+		if(delta_us != 0) framerate = std::round(1000000.0 / delta_us);
 
 		replayer.next_frame();
 		display.draw_window(replayer.get_particles(), framerate);
