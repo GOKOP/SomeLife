@@ -1,8 +1,9 @@
 #pragma once
 
 #define CL_HPP_TARGET_OPENCL_VERSION 300
-#include <CL/opencl.hpp>
+#include <CL/cl2.hpp>
 
+#pragma pack(push, 4)
 struct Rule {
 	cl_uchar3 particle1_color;
 	cl_uchar3 particle2_color;
@@ -10,3 +11,4 @@ struct Rule {
 	cl_float second_cut;
 	cl_float peak;
 };
+#pragma pack(pop)
