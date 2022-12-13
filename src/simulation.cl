@@ -1,3 +1,4 @@
+#pragma pack(push, 4)
 typedef struct {
 	float2 position;
 	float2 velocity;
@@ -11,6 +12,7 @@ typedef struct {
 	float second_cut;
 	float peak;
 } Rule;
+#pragma pack(pop)
 
 float calculate_force(__global const Rule* rule, float distance) {
 	float large_value = 1;
