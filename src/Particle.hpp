@@ -1,7 +1,6 @@
 #pragma once
 
-#define CL_HPP_TARGET_OPENCL_VERSION 300
-#include <CL/cl2.hpp>
+#include "opencl-proxy.hpp"
 
 #pragma pack(push, 4)
 struct Particle {
