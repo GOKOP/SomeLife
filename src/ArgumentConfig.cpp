@@ -74,7 +74,13 @@ ArgumentConfig::ArgumentConfig(int argc, const char** argv):
 		auto framerate_str = framerate_result.value();
 		auto maybe_framerate = strutil::stoi_positive(framerate_str);
 		if(maybe_framerate.has_value()) framerate = maybe_framerate.value();
-		else errors += "`" + std::string(framerate_str) + "` is not a positive integer number\n";
+		// this generates a warning on GCC with -std=c++20 and -O2
+		//else errors += "`" + std::string(framerate_str) + "` is not a positive integer number\n";
+		else {
+			errors += "`";
+			errors += framerate_str;
+			errors += "is not a positive integer number\n";
+		}
 	}
 
 	int option_number = 0;
