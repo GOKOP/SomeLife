@@ -1,49 +1,66 @@
-#pragma pack(push, 4)
+// using array of structures pattern to sidestep the issue of struct alignment mismatch
+// between the host and the device
 typedef struct {
-	float2 position;
-	float2 velocity;
-	uchar3 color;
-} Particle;
+	__global float2* positions;
+	__global float2* velocities;
+	__global uchar3* colors;
+	int number;
+} ParticleStore;
 
 typedef struct {
-	uchar3 color1;
-	uchar3 color2;
-	float first_cut;
-	float second_cut;
-	float peak;
-} Rule;
-#pragma pack(pop)
+	__global const float2* positions;
+	__global const float2* velocities;
+	__global const uchar3* colors;
+	int number;
+} ConstParticleStore;
 
-float calculate_force(__global const Rule* rule, float distance) {
+typedef struct {
+	__global const float* first_cuts;
+	__global const float* second_cuts;
+	__global const float* peaks;
+	__global const uchar3* colors1;
+	__global const uchar3* colors2;
+	int number;
+} RuleStore;
+
+float calculate_force(const RuleStore* rules, int rule_idx, float distance) {
 	float large_value = 1;
 
-	if(distance > rule->second_cut) return 0;
+	if(distance > rules->second_cuts[rule_idx]) return 0;
 
-	if(distance < rule->first_cut) {
-		float val = (rule->first_cut / distance) - 1 + rule->peak;
+	if(distance < rules->first_cuts[rule_idx]) {
+		float val = (rules->first_cuts[rule_idx] / distance) - 1 + rules->peaks[rule_idx];
 		if(val > large_value || isnan(val) || isinf(val)) return large_value;
 		else return val;
 	}
 
-	if(rule->second_cut == rule->first_cut) return 0;
-	return mix(rule->peak, 0, distance / (rule->second_cut - rule->first_cut));
+	if(rules->second_cuts[rule_idx] == rules->first_cuts[rule_idx]) return 0;
+	return mix(rules->peaks[rule_idx], 0, distance / (rules->second_cuts[rule_idx] - rules->first_cuts[rule_idx]));
 }
 
-void execute_rule(__global const Rule* rule, __global Particle* p1, __global const Particle* p2) {
-	float distance_x = p1->position.x - p2->position.x;
-	float distance_y = p1->position.y - p2->position.y;
+void execute_rule(
+	RuleStore* rules, 
+	ParticleStore* new_particles,
+	ConstParticleStore* old_particles,
+	int rule_idx, int new_idx, int old_idx
+) {
+	float distance_x = 
+		new_particles->positions[new_idx].x - old_particles->positions[old_idx].x;
+	float distance_y = 
+		new_particles->positions[new_idx].y - old_particles->positions[old_idx].y;
+
 	float distance = sqrt(distance_x*distance_x + distance_y*distance_y);
 	if(distance == 0) return;
 
 	float normalized_x = distance_x / distance;
 	float normalized_y = distance_y / distance;
 
-	float force = calculate_force(rule, distance);
+	float force = calculate_force(rules, rule_idx, distance);
 	float force_x = force * normalized_x;
 	float force_y = force * normalized_y;
 
-	p1->velocity.x += force_x;
-	p1->velocity.y += force_y;
+	new_particles->velocities[new_idx].x += force_x;
+	new_particles->velocities[new_idx].y += force_y;
 }
 
 float2 apply_friction(float2 velocity, float friction) {
@@ -52,46 +69,59 @@ float2 apply_friction(float2 velocity, float friction) {
 	return velocity;
 }
 
-void perform_movement(__global Particle* particle, int2 board_size, float friction) {
-	particle->velocity = apply_friction(particle->velocity, friction);
+void perform_movement(ParticleStore* particles, int idx, int2 board_size, float friction) {
+	particles->velocities[idx] = apply_friction(particles->velocities[idx], friction);
 
-	float new_x = particle->position.x + particle->velocity.x;
-	float new_y = particle->position.y + particle->velocity.y;
+	float new_x = particles->positions[idx].x + particles->velocities[idx].x;
+	float new_y = particles->positions[idx].y + particles->velocities[idx].y;
 
-	if(new_x < 0 || new_x >= board_size.x) particle->velocity.x *= -0.5;
-	else particle->position.x = new_x;
+	if(new_x < 0 || new_x >= board_size.x) particles->velocities[idx].x *= -0.5;
+	else particles->positions[idx].x = new_x;
 
-	if(new_y < 0 || new_y >= board_size.y) particle->velocity.y *= -0.5;
-	else particle->position.y = new_y;
+	if(new_y < 0 || new_y >= board_size.y) particles->velocities[idx].y *= -0.5;
+	else particles->positions[idx].y = new_y;
 }
 
-bool particles_equal(const __global Particle* p1, const __global Particle* p2) {
-	return all(isequal(p1->position, p2->position)) &&
-		all(isequal(p1->velocity, p2->velocity)) &&
-		all(p1->color == p2->color);
+void copy_particle(ConstParticleStore* source, ParticleStore* dest, int idx) {
+	dest->positions[idx] = source->positions[idx];
+	dest->velocities[idx] = source->velocities[idx];
+	dest->colors[idx] = source->colors[idx];
 }
 
+// can't pass a structure with pointers unfortunately
 __kernel void update_particle(
-		__global const Particle* old,
-		__global Particle* new,
-		int n_particles,
-		__global const Rule* rules,
-		int n_rules,
+		__global const float2* old_positions,
+		__global const float2* old_velocities,
+		__global const uchar3* old_colors,
+		__global float2* new_positions,
+		__global float2* new_velocities,
+		__global uchar3* new_colors,
+		int particle_count,
+		__global const float* rule_first_cuts,
+		__global const float* rule_second_cuts,
+		__global const float* rule_peaks,
+		__global const uchar3* rule_colors1,
+		__global const uchar3* rule_colors2,
+		int rule_count,
 		int2 board_size,
 		float friction)
 {
     int i = get_global_id(0);
 
-	new[i] = old[i];
+	ConstParticleStore old = {old_positions, old_velocities, old_colors, particle_count};
+	ParticleStore new = {new_positions, new_velocities, new_colors, particle_count};
+	RuleStore rules = {rule_first_cuts, rule_second_cuts, rule_peaks, rule_colors1, rule_colors2, rule_count};
 
-	for(int rule_i = 0; rule_i < n_rules; ++rule_i) {
-		if(any(rules[rule_i].color1 != old[i].color)) continue;
+	copy_particle(&old, &new, i);
 
-		for(int other_i = 0; other_i < n_particles; ++other_i) {
-			if(particles_equal(&old[i], &old[other_i])) continue;
-			if(any(rules[rule_i].color2 != old[other_i].color)) continue;
-			execute_rule(&rules[rule_i], &new[i], &old[other_i]);
+	for(int rule_i = 0; rule_i < rules.number ; ++rule_i) {
+		if(any(rules.colors1[rule_i] != old.colors[i])) continue;
+
+		for(int other_i = 0; other_i < old.number; ++other_i) {
+			if(i == other_i) continue;
+			if(any(rules.colors2[rule_i] != old.colors[other_i])) continue;
+			execute_rule(&rules, &new, &old, rule_i, i, other_i);
 		}
 	}
-	perform_movement(&new[i], board_size, friction);
+	perform_movement(&new, i, board_size, friction);
 }

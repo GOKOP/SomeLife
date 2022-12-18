@@ -2,13 +2,18 @@
 #include <random>
 #include <cmath>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 
 Simulation::Simulation(const Recipe& recipe, bool cpu_is_big_endian):
 	cpu_is_big_endian(cpu_is_big_endian),
-	runner("simulation.cl", "update_particle")
+	store1_is_new(true)
 {
-	cl_float friction = 0;
+	init_from_recipe(recipe);
+	init_opencl();
+}
 
+void Simulation::init_from_recipe(const Recipe& recipe) {
 	for(const auto& step : recipe.get_steps()) {
 		if(std::holds_alternative<Recipe::Window>(step)) {
 			auto window = std::get<Recipe::Window>(step);
@@ -28,22 +33,45 @@ Simulation::Simulation(const Recipe& recipe, bool cpu_is_big_endian):
 			add_rule(rule);
 		}
 	}
-
-	runner.init_data(particles, rules, {{board_size.x, board_size.y}}, friction);
 }
 
-const std::vector<Particle>& Simulation::get_particles() const {
-	return particles;
-}
+void Simulation::init_opencl() {
+	get_old_store().overwrite_vector(get_new_store().get_particles());
 
-const sf::Vector2i Simulation::get_board_size() const {
-	return board_size;
+	auto device = clutils::log_get_default_device();
+	context = clutils::log_create_context(device);
+	command_queue = clutils::log_create_command_queue(context);
+
+	// read program code
+	std::ifstream program_file(opencl_file_name);
+	if(!program_file.is_open()) std::cerr << "Can't open " << opencl_file_name << '\n';
+	std::stringstream ss;
+	ss << program_file.rdbuf();
+	std::string program_source = ss.str();
+	program_file.close();
+
+	program = clutils::log_create_program(context, device, program_source);
+	kernel = clutils::log_create_kernel(program, opencl_kernel_name);
+
+	get_old_store().init_buffers_with_particles(context, command_queue);
+	get_new_store().init_buffers_with_particles(context, command_queue);
+	rule_store.init_buffers_with_rules(context, command_queue);
+
+	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(get_new_store().get_particles().size()));
+	clutils::log_kernel_setarg(kernel, 7, rule_store.get_first_cuts());
+	clutils::log_kernel_setarg(kernel, 8, rule_store.get_second_cuts());
+	clutils::log_kernel_setarg(kernel, 9, rule_store.get_peaks());
+	clutils::log_kernel_setarg(kernel, 10, rule_store.get_colors1());
+	clutils::log_kernel_setarg(kernel, 11, rule_store.get_colors2());
+	clutils::log_kernel_setarg(kernel, 12, static_cast<cl_int>(rule_store.get_rule_count()));
+	clutils::log_kernel_setarg(kernel, 13, board_size);
+	clutils::log_kernel_setarg(kernel, 14, friction);
 }
 
 void Simulation::add_particle(const Particle& particle) {
 	if(particle.position.x > 0 && particle.position.y > 0 &&
 	   particle.position.x < board_size.x && particle.position.y < board_size.y) {
-		particles.push_back(particle);
+		get_new_store().add_particle(particle);
 	}
 }
 
@@ -55,30 +83,34 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 	auto x_dist = std::uniform_real_distribution<float>(0, board_size.x);
 	auto y_dist = std::uniform_real_distribution<float>(0, board_size.y);
 
-	cl_uchar3 cl_color {{color.r, color.g, color.b}};
-
 	for(int i=0; i<amount; ++i) {
-		add_particle(Particle{{{x_dist(eng), y_dist(eng)}}, {{0, 0}}, cl_color});
+		add_particle(Particle{{x_dist(eng), y_dist(eng)}, {0, 0}, color});
 	}
 }
 
-void Simulation::add_rule(const Rule& rule) {
-	rules.push_back(rule);
-}
-
 void Simulation::update() {
-	runner.run_and_fetch(particles);
+	store1_is_new = !store1_is_new;
+
+	clutils::log_kernel_setarg(kernel, 0, get_old_store().positions);
+	clutils::log_kernel_setarg(kernel, 1, get_old_store().velocities);
+	clutils::log_kernel_setarg(kernel, 2, get_old_store().colors);
+	clutils::log_kernel_setarg(kernel, 3, get_new_store().positions);
+	clutils::log_kernel_setarg(kernel, 4, get_new_store().velocities);
+	clutils::log_kernel_setarg(kernel, 5, get_new_store().colors);
+
+	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, store1.get_particles().size());
+	get_new_store().update_particles_from_buffers(command_queue);
 }
 
 void Simulation::init_recording(std::ofstream& out) const {
-	std::size_t particle_count = particles.size();
+	std::size_t particle_count = get_new_store().get_particles().size();
 	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(sf::Int32));
 	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(sf::Int32));
 	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(sf::Int32));
 }
 
 void Simulation::record(std::ofstream& out) const {
-	for(const auto& particle : particles) {
+	for(const auto& particle : get_new_store().get_particles()) {
 		if(cpu_is_big_endian) {
 			// convert to little endian (not tested)
 			auto* ptr = reinterpret_cast<const char*>(&particle);

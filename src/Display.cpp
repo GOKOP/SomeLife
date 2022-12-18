@@ -41,9 +41,7 @@ void Display::draw_window(const std::vector<Particle>& particles, int framerate)
 	window.clear(sf::Color::Black);
 
 	for(const auto& particle : particles) {
-		draw_point(
-			{particle.position.x, particle.position.y}, 
-			sf::Color(particle.color.x, particle.color.y, particle.color.z));
+		draw_point(particle.position, particle.color);
 	}
 
 	print_framerate(framerate);

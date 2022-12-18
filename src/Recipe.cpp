@@ -117,10 +117,7 @@ std::optional<Recipe::Step> Recipe::load_rule(const std::vector<std::string>& wo
 	}
 	float peak = maybe_value.value();
 
-	return Rule {
-		{{color1.r, color1.g, color1.b}},
-		{{color2.r, color2.g, color2.b}},
-		first_cut, second_cut, peak };
+	return Rule {color1, color2, first_cut, second_cut, peak };
 }
 
 std::optional<Recipe::Step> Recipe::load_window(const std::vector<std::string>& words) {

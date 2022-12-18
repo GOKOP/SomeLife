@@ -26,13 +26,13 @@ namespace clutils {
 	void log_enqueue_ndrange_kernel(const cl::CommandQueue& queue, cl::Kernel& kernel, const cl::NDRange& global);
 
 	template<typename Container>
-	void log_copy(const cl::CommandQueue& queue, Container source, cl::Buffer& dest) {
+	void log_copy(const cl::CommandQueue& queue, const Container& source, cl::Buffer& dest) {
 		cl_int ret = cl::copy(queue, source.begin(), source.end(), dest);
 		if(ret != CL_SUCCESS) log_error("copy()", ret);
 	}
 
 	template<typename Container>
-	void log_copy(const cl::CommandQueue& queue, cl::Buffer& source, Container dest) {
+	void log_copy(const cl::CommandQueue& queue, cl::Buffer& source, Container& dest) {
 		cl_int ret = cl::copy(queue, source, dest.begin(), dest.end());
 		if(ret != CL_SUCCESS) log_error("copy()", ret);
 	}

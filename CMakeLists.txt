@@ -10,7 +10,7 @@ include_directories(src)
 file(GLOB SOURCES "src/*.cpp")
 
 add_executable(somelife ${SOURCES})
-set_target_properties(somelife PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED 17)
+set_target_properties(somelife PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED 20)
 target_link_libraries(somelife sfml-graphics)
 target_link_libraries(somelife OpenCL::OpenCL)
 

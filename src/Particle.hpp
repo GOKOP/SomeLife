@@ -1,11 +1,9 @@
 #pragma once
 
-#include "opencl-proxy.hpp"
+#include <SFML/Graphics.hpp>
 
-#pragma pack(push, 4)
 struct Particle {
-	cl_float2 position;
-	cl_float2 velocity;
-	cl_uchar3 color;
+	sf::Vector2f position;
+	sf::Vector2f velocity;
+	sf::Color color;
 };
-#pragma pack(pop)
