@@ -4,7 +4,13 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 300
 #endif
 
-#include <CL/opencl.hpp>
+// Todo: remove when OpenCL 3 lands in vcpkg
+#if __has_include(<CL/opencl.hpp>)
+	#include <CL/opencl.hpp>
+#else
+	#include <CL/cl2.hpp>
+#endif
+
 #include <string_view>
 #include <vector>
 #include <span>
