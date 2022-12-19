@@ -53,7 +53,7 @@ bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 
 		simulation.update();
 		if(record_stream.is_open() && record_stream.good()) simulation.record(record_stream);
-		display.draw_window(simulation.get_particles(), framerate);
+		display.draw_window(simulation.get_particle_store(), framerate);
 	}
 
 	return true;

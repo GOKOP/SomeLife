@@ -40,7 +40,7 @@ class Simulation {
 public:
 	Simulation(const Recipe& recipe, bool cpu_is_big_endian);
 
-	inline const std::vector<Particle>& get_particles() const { return get_new_store().get_particles(); }
+	inline const ParticleStore& get_particle_store() const { return get_new_store(); }
 	inline const cl_int2 get_board_size() const { return board_size; }
 
 	void update();

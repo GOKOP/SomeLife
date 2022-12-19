@@ -1,9 +1,9 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "opencl-utils.hpp"
 
 struct Particle {
-	sf::Vector2f position;
-	sf::Vector2f velocity;
-	sf::Color color;
+	cl_float2 position;
+	cl_float2 velocity;
+	cl_uchar3 color;
 };

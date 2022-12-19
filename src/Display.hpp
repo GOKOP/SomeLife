@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include <Particle.hpp>
+#include <ParticleStore.hpp>
 
 #define POINT_RADIUS 2
 
@@ -21,5 +21,7 @@ public:
 	bool window_is_open() const;
 
 	void draw_window(const std::vector<Particle>& particles, int framerate);
+	void draw_window(const ParticleStore& particles, int framerate);
 	void handle_events();
+
 };

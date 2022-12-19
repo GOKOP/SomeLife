@@ -36,7 +36,7 @@ void Simulation::init_from_recipe(const Recipe& recipe) {
 }
 
 void Simulation::init_opencl() {
-	get_old_store().overwrite_vector(get_new_store().get_particles());
+	get_old_store().overwrite_data_from_other(get_new_store());
 
 	auto device = clutils::log_get_default_device();
 	context = clutils::log_create_context(device);
@@ -57,7 +57,7 @@ void Simulation::init_opencl() {
 	get_new_store().init_buffers_with_particles(context, command_queue);
 	rule_store.init_buffers_with_rules(context, command_queue);
 
-	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(get_new_store().get_particles().size()));
+	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(get_new_store().get_particle_count()));
 	clutils::log_kernel_setarg(kernel, 7, rule_store.get_first_cuts());
 	clutils::log_kernel_setarg(kernel, 8, rule_store.get_second_cuts());
 	clutils::log_kernel_setarg(kernel, 9, rule_store.get_peaks());
@@ -84,7 +84,7 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 	auto y_dist = std::uniform_real_distribution<float>(0, board_size.y);
 
 	for(int i=0; i<amount; ++i) {
-		add_particle(Particle{{x_dist(eng), y_dist(eng)}, {0, 0}, color});
+		add_particle(Particle{{x_dist(eng), y_dist(eng)}, {0, 0}, {color.r, color.g, color.b}});
 	}
 }
 
@@ -98,19 +98,19 @@ void Simulation::update() {
 	clutils::log_kernel_setarg(kernel, 4, get_new_store().velocities);
 	clutils::log_kernel_setarg(kernel, 5, get_new_store().colors);
 
-	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, store1.get_particles().size());
+	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, store1.get_particle_count());
 	get_new_store().update_particles_from_buffers(command_queue);
 }
 
 void Simulation::init_recording(std::ofstream& out) const {
-	std::size_t particle_count = get_new_store().get_particles().size();
+	std::size_t particle_count = get_new_store().get_particle_count();
 	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(sf::Int32));
 	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(sf::Int32));
 	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(sf::Int32));
 }
 
 void Simulation::record(std::ofstream& out) const {
-	for(const auto& particle : get_new_store().get_particles()) {
+	/*for(const auto& particle : get_new_store().get_particles()) {
 		if(cpu_is_big_endian) {
 			// convert to little endian (not tested)
 			auto* ptr = reinterpret_cast<const char*>(&particle);
@@ -120,5 +120,5 @@ void Simulation::record(std::ofstream& out) const {
 		} else {
 			out.write(reinterpret_cast<const char*>(&particle), sizeof(Particle));
 		}
-	}
+	}*/
 }
