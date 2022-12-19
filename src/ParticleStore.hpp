@@ -20,9 +20,6 @@ public:
 	cl::Buffer velocities;
 	cl::Buffer colors;
 
-	inline cl_float2 get_position(int idx) const { return positions_cpu[idx]; }
-	inline cl_float2 get_velocity(int idx) const { return velocities_cpu[idx]; }
-	inline cl_uchar3 get_color(int idx) const { return colors_cpu[idx]; }
 	inline std::size_t get_particle_count() const { return positions_cpu.size(); }
 
 	void add_particle(const Particle& particle);
