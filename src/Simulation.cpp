@@ -14,6 +14,8 @@ Simulation::Simulation(const Recipe& recipe, bool cpu_is_big_endian):
 }
 
 void Simulation::init_from_recipe(const Recipe& recipe) {
+	friction = 0;
+
 	for(const auto& step : recipe.get_steps()) {
 		if(std::holds_alternative<Recipe::Window>(step)) {
 			auto window = std::get<Recipe::Window>(step);
