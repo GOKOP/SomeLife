@@ -20,7 +20,7 @@ public:
 	cl::Buffer velocities;
 	cl::Buffer colors;
 
-	inline std::size_t get_particle_count() const { return positions_cpu.size(); }
+	inline std::size_t size() const { return positions_cpu.size(); }
 
 	void add_particle(const Particle& particle);
 	void overwrite_data_from_other(const ParticleStore& other);

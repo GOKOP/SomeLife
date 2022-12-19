@@ -62,7 +62,7 @@ void Simulation::init_opencl() {
 	clutils::log_kernel_setarg(kernel, 3, new_store.positions);
 	clutils::log_kernel_setarg(kernel, 4, new_store.velocities);
 	clutils::log_kernel_setarg(kernel, 5, new_store.colors);
-	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(new_store.get_particle_count()));
+	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(new_store.size()));
 	clutils::log_kernel_setarg(kernel, 7, rule_store.get_first_cuts());
 	clutils::log_kernel_setarg(kernel, 8, rule_store.get_second_cuts());
 	clutils::log_kernel_setarg(kernel, 9, rule_store.get_peaks());
@@ -95,12 +95,12 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 
 void Simulation::update() {
 
-	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, new_store.get_particle_count());
+	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, new_store.size());
 	new_store.update_particles_from_buffers(command_queue);
 }
 
 void Simulation::init_recording(std::ofstream& out) const {
-	std::size_t particle_count = new_store.get_particle_count();
+	std::size_t particle_count = new_store.size();
 	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(cl_int));
 	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(cl_int));
 	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(cl_int));
