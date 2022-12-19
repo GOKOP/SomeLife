@@ -7,14 +7,13 @@
 #include "Particle.hpp"
 
 class Replayer {
-	bool cpu_is_big_endian;
 	std::ifstream file_input;
 	std::vector<Particle> particles;
 	cl_int2 board_size;
 
 public:
 
-	Replayer(std::string_view recording_file, bool cpu_is_big_endian);
+	Replayer(std::string_view recording_file);
 
 	bool is_good() const;
 	const std::vector<Particle>& get_particles() const;

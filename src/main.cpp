@@ -10,12 +10,6 @@
 
 using namespace std::chrono;
 
-bool cpu_is_big_endian() {
-	int x = 1;
-	auto* ptr = reinterpret_cast<char*>(&x);
-	return *ptr == 0;
-}
-
 bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 	auto recipe = Recipe(arg_config.get_recipe_path());
 	if(!recipe.get_errors().empty()) {
@@ -24,7 +18,7 @@ bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 		return false;
 	}
 
-	Simulation simulation(recipe, cpu_is_big_endian());
+	Simulation simulation(recipe);
 	Display display(
 			simulation.get_board_size().x,
 			simulation.get_board_size().y,
@@ -60,7 +54,7 @@ bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 }
 
 bool run_replay(ArgumentConfig arg_config, int target_fps) {
-	Replayer replayer(arg_config.get_recording_path(), cpu_is_big_endian());
+	Replayer replayer(arg_config.get_recording_path());
 	if(!replayer.is_good()) {
 		std::cout << "Can't open file: " << arg_config.get_recording_path() << "\n";
 		return false;

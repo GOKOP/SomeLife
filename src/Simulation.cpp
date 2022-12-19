@@ -5,8 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-Simulation::Simulation(const Recipe& recipe, bool cpu_is_big_endian):
-	cpu_is_big_endian(cpu_is_big_endian),
+Simulation::Simulation(const Recipe& recipe):
 	store1_is_new(true)
 {
 	init_from_recipe(recipe);
@@ -113,7 +112,7 @@ void Simulation::init_recording(std::ofstream& out) const {
 
 void Simulation::record(std::ofstream& out) const {
 	for(auto particle : get_new_store()) {
-		if(cpu_is_big_endian) {
+		if(std::endian::native == std::endian::big) {
 			// convert to little endian (not tested)
 			auto* ptr = reinterpret_cast<const char*>(&particle);
 			for(int i = sizeof(Particle) - 1; i >= 0; --i) {

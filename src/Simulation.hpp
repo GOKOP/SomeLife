@@ -11,7 +11,6 @@ class Simulation {
 	const std::string opencl_file_name = "simulation.cl";
 	const std::string opencl_kernel_name = "update_particle";
 
-	bool cpu_is_big_endian; // for recording
 	cl_int2 board_size;
 	cl_float friction;
 
@@ -38,7 +37,7 @@ class Simulation {
 	void init_opencl();
 
 public:
-	Simulation(const Recipe& recipe, bool cpu_is_big_endian);
+	Simulation(const Recipe& recipe);
 
 	inline const ParticleStore& get_particle_store() const { return get_new_store(); }
 	inline const cl_int2 get_board_size() const { return board_size; }
