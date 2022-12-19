@@ -3,14 +3,14 @@
 #include <fstream>
 #include <vector>
 #include <string_view>
-#include <SFML/System/Vector2.hpp>
+#include "opencl-utils.hpp"
 #include "Particle.hpp"
 
 class Replayer {
 	bool cpu_is_big_endian;
 	std::ifstream file_input;
 	std::vector<Particle> particles;
-	sf::Vector2i board_size;
+	cl_int2 board_size;
 
 public:
 
@@ -18,7 +18,7 @@ public:
 
 	bool is_good() const;
 	const std::vector<Particle>& get_particles() const;
-	const sf::Vector2i& get_board_size() const;
+	cl_int2 get_board_size() const;
 
 	void next_frame();
 };

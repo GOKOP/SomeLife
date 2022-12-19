@@ -7,11 +7,11 @@ Replayer::Replayer(std::string_view recording_file, bool cpu_is_big_endian):
 	file_input.open(recording_file.data(), std::ios::binary);
 	if(!file_input.good()) return;
 
-	std::size_t particle_count;
+	cl_int particle_count;
 
-	file_input.read(reinterpret_cast<char*>(&board_size.x), sizeof(int));
-	file_input.read(reinterpret_cast<char*>(&board_size.y), sizeof(int));
-	file_input.read(reinterpret_cast<char*>(&particle_count), sizeof(std::size_t));
+	file_input.read(reinterpret_cast<char*>(&board_size.x), sizeof(cl_int));
+	file_input.read(reinterpret_cast<char*>(&board_size.y), sizeof(cl_int));
+	file_input.read(reinterpret_cast<char*>(&particle_count), sizeof(cl_int));
 
 	particles.resize(particle_count, Particle{{0, 0}, {0, 0}, {0, 0, 0}});
 }
@@ -24,7 +24,7 @@ const std::vector<Particle>& Replayer::get_particles() const {
 	return particles;
 }
 
-const sf::Vector2i& Replayer::get_board_size() const {
+cl_int2 Replayer::get_board_size() const {
 	return board_size;
 }
 

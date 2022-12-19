@@ -106,13 +106,13 @@ void Simulation::update() {
 
 void Simulation::init_recording(std::ofstream& out) const {
 	std::size_t particle_count = get_new_store().get_particle_count();
-	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(sf::Int32));
-	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(sf::Int32));
-	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(sf::Int32));
+	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(cl_int));
+	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(cl_int));
+	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(cl_int));
 }
 
 void Simulation::record(std::ofstream& out) const {
-	/*for(const auto& particle : get_new_store().get_particles()) {
+	for(auto particle : get_new_store()) {
 		if(cpu_is_big_endian) {
 			// convert to little endian (not tested)
 			auto* ptr = reinterpret_cast<const char*>(&particle);
@@ -122,5 +122,5 @@ void Simulation::record(std::ofstream& out) const {
 		} else {
 			out.write(reinterpret_cast<const char*>(&particle), sizeof(Particle));
 		}
-	}*/
+	}
 }

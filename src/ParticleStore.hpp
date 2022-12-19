@@ -30,4 +30,53 @@ public:
 
 	void init_buffers_with_particles(const cl::Context& context, const cl::CommandQueue& queue);
 	void update_particles_from_buffers(const cl::CommandQueue& queue);
+
+
+	// Iterator over the CPU-side data;
+	// note that because of the use of a proxy object, the iterator doesn't work entirely
+	// and wouldn't pass any iterator concept assert (-> doesn't work for example).
+	// Pointer and reference are just copies and the same as value_type
+	// Assuming 64-bit pointers this is actually slightly cheaper than creating some referential 
+	// type (and a single reference obviously won't work because there's nothing to refer to)
+
+	class ConstIterator {
+		using iterator_category = std::random_access_iterator_tag;
+		using difference_type = std::ptrdiff_t;
+		using value_type = Particle;
+		using pointer = Particle;
+		using reference = Particle;
+
+		using f2vec_iter = std::vector<cl_float2>::const_iterator;
+		using c3vec_iter = std::vector<cl_uchar3>::const_iterator;
+
+		f2vec_iter pos_iter;
+		f2vec_iter vel_iter;
+		c3vec_iter color_iter;
+
+	public:
+
+		inline ConstIterator(f2vec_iter pos_iter, f2vec_iter vel_iter, c3vec_iter color_iter):
+			pos_iter(pos_iter), vel_iter(vel_iter), color_iter(color_iter) {}
+
+		reference operator*();
+		//pointer operator->(); // can't work because there's no actual pointer
+
+		ConstIterator& operator++();
+		ConstIterator& operator--();
+
+		ConstIterator operator++(int);
+		ConstIterator operator--(int);
+
+		ConstIterator& operator+=(int i);
+		ConstIterator& operator-=(int i);
+		
+		ConstIterator operator+(int i);
+		ConstIterator operator-(int i);
+
+		bool friend operator==(const ConstIterator& lhs, const ConstIterator& rhs);
+		bool friend operator!=(const ConstIterator& lhs, const ConstIterator& rhs);
+	};
+
+	ConstIterator begin() const;
+	ConstIterator end() const;
 };

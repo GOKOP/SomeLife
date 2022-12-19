@@ -53,10 +53,10 @@ void Display::draw_window(const std::vector<Particle>& particles, int framerate)
 void Display::draw_window(const ParticleStore& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
-	for(std::size_t i = 0; i < particles.get_particle_count(); ++i) {
+	for(auto particle : particles) {
 		draw_point(
-			{ particles.get_position(i).x, particles.get_position(i).y },
-			{ particles.get_color(i).x, particles.get_color(i).y, particles.get_color(i).z });
+			{ particle.position.x, particle.position.y },
+			{ particle.color.x, particle.color.y, particle.color.z });
 	}
 
 	print_framerate(framerate);
