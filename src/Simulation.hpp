@@ -20,14 +20,8 @@ class Simulation {
 	cl::Kernel kernel;
 
 	RuleStore rule_store;
-	ParticleStore store1;
-	ParticleStore store2;
-	bool store1_is_new;
-
-	inline ParticleStore& get_new_store() { return store1_is_new ? store1 : store2; };
-	inline const ParticleStore& get_new_store() const { return store1_is_new ? store1 : store2; };
-	inline ParticleStore& get_old_store() { return store1_is_new ? store2 : store1; };
-	inline const ParticleStore& get_old_store() const { return store1_is_new ? store2 : store1; };
+	ParticleStore new_store;
+	ParticleStore old_store;
 
 	void add_particle(const Particle& particle);
 	inline void add_rule(const Rule& rule) { rule_store.add_rule(rule); }
@@ -39,7 +33,7 @@ class Simulation {
 public:
 	Simulation(const Recipe& recipe);
 
-	inline const ParticleStore& get_particle_store() const { return get_new_store(); }
+	inline const ParticleStore& get_particle_store() const { return new_store; }
 	inline const cl_int2 get_board_size() const { return board_size; }
 
 	void update();

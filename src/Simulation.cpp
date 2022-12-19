@@ -5,9 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-Simulation::Simulation(const Recipe& recipe):
-	store1_is_new(true)
-{
+Simulation::Simulation(const Recipe& recipe) {
 	init_from_recipe(recipe);
 	init_opencl();
 }
@@ -37,7 +35,7 @@ void Simulation::init_from_recipe(const Recipe& recipe) {
 }
 
 void Simulation::init_opencl() {
-	get_old_store().overwrite_data_from_other(get_new_store());
+	old_store.overwrite_data_from_other(new_store);
 
 	auto device = clutils::log_get_default_device();
 	context = clutils::log_create_context(device);
@@ -54,11 +52,17 @@ void Simulation::init_opencl() {
 	program = clutils::log_create_program(context, device, program_source);
 	kernel = clutils::log_create_kernel(program, opencl_kernel_name);
 
-	get_old_store().init_buffers_with_particles(context, command_queue);
-	get_new_store().init_buffers_with_particles(context, command_queue);
+	old_store.init_buffers_with_particles(context, command_queue);
+	new_store.init_buffers_with_particles(context, command_queue);
 	rule_store.init_buffers_with_rules(context, command_queue);
 
-	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(get_new_store().get_particle_count()));
+	clutils::log_kernel_setarg(kernel, 0, old_store.positions);
+	clutils::log_kernel_setarg(kernel, 1, old_store.velocities);
+	clutils::log_kernel_setarg(kernel, 2, old_store.colors);
+	clutils::log_kernel_setarg(kernel, 3, new_store.positions);
+	clutils::log_kernel_setarg(kernel, 4, new_store.velocities);
+	clutils::log_kernel_setarg(kernel, 5, new_store.colors);
+	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(new_store.get_particle_count()));
 	clutils::log_kernel_setarg(kernel, 7, rule_store.get_first_cuts());
 	clutils::log_kernel_setarg(kernel, 8, rule_store.get_second_cuts());
 	clutils::log_kernel_setarg(kernel, 9, rule_store.get_peaks());
@@ -72,7 +76,7 @@ void Simulation::init_opencl() {
 void Simulation::add_particle(const Particle& particle) {
 	if(particle.position.x > 0 && particle.position.y > 0 &&
 	   particle.position.x < board_size.x && particle.position.y < board_size.y) {
-		get_new_store().add_particle(particle);
+		new_store.add_particle(particle);
 	}
 }
 
@@ -90,28 +94,20 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 }
 
 void Simulation::update() {
-	store1_is_new = !store1_is_new;
 
-	clutils::log_kernel_setarg(kernel, 0, get_old_store().positions);
-	clutils::log_kernel_setarg(kernel, 1, get_old_store().velocities);
-	clutils::log_kernel_setarg(kernel, 2, get_old_store().colors);
-	clutils::log_kernel_setarg(kernel, 3, get_new_store().positions);
-	clutils::log_kernel_setarg(kernel, 4, get_new_store().velocities);
-	clutils::log_kernel_setarg(kernel, 5, get_new_store().colors);
-
-	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, store1.get_particle_count());
-	get_new_store().update_particles_from_buffers(command_queue);
+	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, new_store.get_particle_count());
+	new_store.update_particles_from_buffers(command_queue);
 }
 
 void Simulation::init_recording(std::ofstream& out) const {
-	std::size_t particle_count = get_new_store().get_particle_count();
+	std::size_t particle_count = new_store.get_particle_count();
 	out.write(reinterpret_cast<const char*>(&board_size.x), sizeof(cl_int));
 	out.write(reinterpret_cast<const char*>(&board_size.y), sizeof(cl_int));
 	out.write(reinterpret_cast<const char*>(&particle_count), sizeof(cl_int));
 }
 
 void Simulation::record(std::ofstream& out) const {
-	for(auto particle : get_new_store()) {
+	for(auto particle : new_store) {
 		if(std::endian::native == std::endian::big) {
 			// convert to little endian (not tested)
 			auto* ptr = reinterpret_cast<const char*>(&particle);
