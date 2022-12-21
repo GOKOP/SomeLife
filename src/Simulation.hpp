@@ -21,8 +21,14 @@ class Simulation {
 	cl::NDRange global_work_size;
 
 	RuleStore rule_store;
-	ParticleStore new_store;
-	ParticleStore old_store;
+	ParticleStore store1;
+	ParticleStore store2;
+	bool store1_is_new = true;
+
+	inline ParticleStore& new_store() { return store1_is_new ? store1 : store2; };
+	inline ParticleStore& old_store() { return store1_is_new ? store2 : store1; };
+	inline const ParticleStore& new_store() const { return store1_is_new ? store1 : store2; };
+	inline const ParticleStore& old_store() const { return store1_is_new ? store2 : store1; };
 
 	void add_particle(const Particle& particle);
 	inline void add_rule(const Rule& rule) { rule_store.add_rule(rule); }
@@ -34,7 +40,7 @@ class Simulation {
 public:
 	Simulation(const Recipe& recipe);
 
-	inline const ParticleStore& get_particle_store() const { return new_store; }
+	inline const ParticleStore& get_particle_store() const { return new_store(); }
 	inline const cl_int2 get_board_size() const { return board_size; }
 
 	void update();

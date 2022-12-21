@@ -8,11 +8,18 @@ typedef struct {
 } ParticleStore;
 
 typedef struct {
-	__global const float* first_cuts;
-	__global const float* second_cuts;
-	__global const float* peaks;
-	__global const uchar3* colors1;
-	__global const uchar3* colors2;
+	__constant float2* positions;
+	__constant float2* velocities;
+	__constant uchar3* colors;
+	int number;
+} ConstParticleStore;
+
+typedef struct {
+	__constant float* first_cuts;
+	__constant float* second_cuts;
+	__constant float* peaks;
+	__constant uchar3* colors1;
+	__constant uchar3* colors2;
 	int number;
 } RuleStore;
 
@@ -34,7 +41,7 @@ float calculate_force(const RuleStore* rules, int rule_idx, float distance) {
 void execute_rule(
 	RuleStore* rules, 
 	ParticleStore* new_particles,
-	ParticleStore* old_particles,
+	ConstParticleStore* old_particles,
 	int rule_idx, int new_idx, int old_idx
 ) {
 	float distance_x = 
@@ -75,7 +82,7 @@ void perform_movement(ParticleStore* particles, int idx, int2 board_size, float 
 	else particles->positions[idx].y = new_y;
 }
 
-void copy_particle(ParticleStore* source, ParticleStore* dest, int idx) {
+void copy_particle(ConstParticleStore* source, ParticleStore* dest, int idx) {
 	dest->positions[idx] = source->positions[idx];
 	dest->velocities[idx] = source->velocities[idx];
 	dest->colors[idx] = source->colors[idx];
@@ -83,18 +90,18 @@ void copy_particle(ParticleStore* source, ParticleStore* dest, int idx) {
 
 // can't pass a structure with pointers unfortunately
 __kernel void update_particle(
-		__global float2* old_positions,
-		__global float2* old_velocities,
-		__global uchar3* old_colors,
+		__constant float2* old_positions,
+		__constant float2* old_velocities,
+		__constant uchar3* old_colors,
 		__global float2* new_positions,
 		__global float2* new_velocities,
 		__global uchar3* new_colors,
 		int particle_count,
-		__global const float* rule_first_cuts,
-		__global const float* rule_second_cuts,
-		__global const float* rule_peaks,
-		__global const uchar3* rule_colors1,
-		__global const uchar3* rule_colors2,
+		__constant float* rule_first_cuts,
+		__constant float* rule_second_cuts,
+		__constant float* rule_peaks,
+		__constant uchar3* rule_colors1,
+		__constant uchar3* rule_colors2,
 		int rule_count,
 		int2 board_size,
 		float friction)
@@ -102,11 +109,12 @@ __kernel void update_particle(
     int i = get_global_id(0);
 	if(i >= particle_count) i = 0;
 
-	ParticleStore old = {old_positions, old_velocities, old_colors, particle_count};
+	ConstParticleStore old = {old_positions, old_velocities, old_colors, particle_count};
 	ParticleStore new = {new_positions, new_velocities, new_colors, particle_count};
 	RuleStore rules = {rule_first_cuts, rule_second_cuts, rule_peaks, rule_colors1, rule_colors2, rule_count};
 
-	copy_particle(&new, &old, i);
+	//copy_particle(&new, &old, i);
+	copy_particle(&old, &new, i);
 
 	for(int rule_i = 0; rule_i < rules.number ; ++rule_i) {
 		if(any(rules.colors1[rule_i] != old.colors[i])) continue;
