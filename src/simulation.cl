@@ -100,6 +100,7 @@ __kernel void update_particle(
 		float friction)
 {
     int i = get_global_id(0);
+	if(i >= particle_count) i = 0;
 
 	ParticleStore old = {old_positions, old_velocities, old_colors, particle_count};
 	ParticleStore new = {new_positions, new_velocities, new_colors, particle_count};

@@ -71,6 +71,15 @@ void Simulation::init_opencl() {
 	clutils::log_kernel_setarg(kernel, 12, static_cast<cl_int>(rule_store.get_rule_count()));
 	clutils::log_kernel_setarg(kernel, 13, board_size);
 	clutils::log_kernel_setarg(kernel, 14, friction);
+
+
+	// make the global work size a multiple of preferred local work size
+	// this prevents OpenCL from doing something silly
+	// like choosing local work size of 1 for odd particle count
+	
+	std::size_t preferred_size = clutils::log_get_kernel_workgroup_info<std::size_t>(kernel, device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
+	if(new_store.size() % preferred_size == 0) global_work_size = new_store.size();
+	else global_work_size = new_store.size() + preferred_size - new_store.size() % preferred_size;
 }
 
 void Simulation::add_particle(const Particle& particle) {
@@ -94,8 +103,7 @@ void Simulation::add_random_particles(int amount, sf::Color color) {
 }
 
 void Simulation::update() {
-
-	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, new_store.size());
+	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, global_work_size);
 	new_store.update_particles_from_buffers(command_queue);
 }
 

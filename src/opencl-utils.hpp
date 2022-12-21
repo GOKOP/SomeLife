@@ -31,6 +31,14 @@ namespace clutils {
 	cl::Buffer log_create_buffer(const cl::Context& context, cl_mem_flags flags, cl::size_type size);
 	void log_enqueue_ndrange_kernel(const cl::CommandQueue& queue, cl::Kernel& kernel, const cl::NDRange& global);
 
+	template<typename T>
+	T log_get_kernel_workgroup_info(const cl::Kernel& kernel, const cl::Device& device, cl_kernel_work_group_info name) {
+		T result {};
+		cl_int ret = kernel.getWorkGroupInfo(device, name, &result);
+		if(ret != CL_SUCCESS) log_error("Kernel::getWorkGroupInfo()", ret);
+		return result;
+	}
+
 	template<typename Container>
 	void log_copy(const cl::CommandQueue& queue, const Container& source, cl::Buffer& dest) {
 		cl_int ret = cl::copy(queue, source.begin(), source.end(), dest);

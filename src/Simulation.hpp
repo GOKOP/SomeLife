@@ -18,6 +18,7 @@ class Simulation {
 	cl::CommandQueue command_queue;
 	cl::Program program;
 	cl::Kernel kernel;
+	cl::NDRange global_work_size;
 
 	RuleStore rule_store;
 	ParticleStore new_store;
