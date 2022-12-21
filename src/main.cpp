@@ -23,7 +23,8 @@ bool run_simulation(const ArgumentConfig& arg_config, int target_fps) {
 			simulation.get_board_size().x,
 			simulation.get_board_size().y,
 			"Life?",
-			target_fps);
+			target_fps,
+			simulation.get_particle_store().size());
 
 	auto record_stream = std::ofstream();
 	if(arg_config.get_recording_state() == ArgumentConfig::RecordingState::Recording) {
@@ -64,7 +65,8 @@ bool run_replay(ArgumentConfig arg_config, int target_fps) {
 			replayer.get_board_size().x,
 			replayer.get_board_size().y,
 			"Life?",
-			target_fps);
+			target_fps,
+			replayer.get_particles().size());
 
 	auto last_frame_time = std::chrono::steady_clock::now();
 

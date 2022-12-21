@@ -1,6 +1,6 @@
 #include "Display.hpp"
 
-Display::Display(int width, int height, std::string title, int framerate):
+Display::Display(int width, int height, std::string title, int framerate, std::size_t particle_count):
 	window(sf::RenderWindow(
 				sf::VideoMode(width, height), 
 				title, 
@@ -10,6 +10,11 @@ Display::Display(int width, int height, std::string title, int framerate):
 {
 	if(framerate > 0) window.setFramerateLimit(framerate);
 	font.loadFromFile("res/DejaVuSans.ttf");
+
+	// each particle is drawn as a hexagon (to save on vertices)
+	// and thus requires six triangles; each triangle requires three vertices
+	// 6 * 3 = 18
+	point_vertices.resize(18 * particle_count);
 }
 
 const sf::RenderWindow& Display::get_window() const {
@@ -20,12 +25,31 @@ bool Display::window_is_open() const {
 	return window.isOpen();
 }
 
-void Display::draw_point(sf::Vector2f pos, sf::Color color) {
-	auto circle = sf::CircleShape(POINT_RADIUS, 6);
-	circle.setFillColor(color);
-	circle.setOrigin(POINT_RADIUS, POINT_RADIUS);
-	circle.setPosition(pos);
-	window.draw(circle);
+std::array<sf::Vertex, POINT_VERTICES> Display::make_point_vertices(sf::Vector2f pos, sf::Color color) {
+	const float sqrt_3 = 1.73205;
+	float offset_x = POINT_RADIUS / 2.0;
+	float offset_y = (POINT_RADIUS * sqrt_3) / 2;
+
+	return {
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x - offset_x, pos.y - offset_y}, color),
+		sf::Vertex({pos.x + offset_x, pos.y - offset_y}, color),
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x + offset_x, pos.y - offset_y}, color),
+		sf::Vertex({pos.x + POINT_RADIUS, pos.y}, color),
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x + POINT_RADIUS, pos.y}, color),
+		sf::Vertex({pos.x + offset_x, pos.y + offset_y}, color),
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x + offset_x, pos.y + offset_y}, color),
+		sf::Vertex({pos.x - offset_x, pos.y + offset_y}, color),
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x - offset_x, pos.y + offset_y}, color),
+		sf::Vertex({pos.x - POINT_RADIUS, pos.y}, color),
+		sf::Vertex(pos, color),
+		sf::Vertex({pos.x - POINT_RADIUS, pos.y}, color),
+		sf::Vertex({pos.x - offset_x, pos.y - offset_y}, color)
+	};
 }
 
 void Display::print_framerate(int framerate) {
@@ -40,12 +64,20 @@ void Display::print_framerate(int framerate) {
 void Display::draw_window(const std::vector<Particle>& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
+	std::size_t vertices_i = 0;
+
 	for(const auto& particle : particles) {
-		draw_point(
+		auto vertices = make_point_vertices(
 			{ particle.position.x, particle.position.y },
 			{ particle.color.x, particle.color.y, particle.color.z });
+
+		for(const auto& vertex : vertices) {
+			point_vertices[vertices_i] = vertex;
+			++vertices_i;
+		}
 	}
 
+	window.draw(point_vertices.data(), point_vertices.size(), sf::Triangles);
 	print_framerate(framerate);
 	window.display();
 }
@@ -53,12 +85,20 @@ void Display::draw_window(const std::vector<Particle>& particles, int framerate)
 void Display::draw_window(const ParticleStore& particles, int framerate) {
 	window.clear(sf::Color::Black);
 
-	for(auto particle : particles) {
-		draw_point(
+	std::size_t vertices_i = 0;
+
+	for(const auto& particle : particles) {
+		auto vertices = make_point_vertices(
 			{ particle.position.x, particle.position.y },
 			{ particle.color.x, particle.color.y, particle.color.z });
+
+		for(const auto& vertex : vertices) {
+			point_vertices[vertices_i] = vertex;
+			++vertices_i;
+		}
 	}
 
+	window.draw(point_vertices.data(), point_vertices.size(), sf::Triangles);
 	print_framerate(framerate);
 	window.display();
 }
