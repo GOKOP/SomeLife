@@ -29,11 +29,3 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	${CMAKE_SOURCE_DIR}/recipes
 	${CMAKE_CURRENT_BINARY_DIR}/recipes)
-
-add_custom_target(do_always ALL)
-
-add_custom_command(
-	TARGET do_always POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
-	${CMAKE_SOURCE_DIR}/src/simulation.cl
-	${CMAKE_CURRENT_BINARY_DIR}/simulation.cl)

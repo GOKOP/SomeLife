@@ -8,7 +8,7 @@
 #include "RuleStore.hpp"
 
 class Simulation {
-	const std::string opencl_file_name = "simulation.cl";
+	const std::string opencl_file_name = "res/opencl/simulation.cl";
 	const std::string opencl_kernel_name = "update_particle";
 
 	cl_int2 board_size;

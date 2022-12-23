@@ -35,7 +35,10 @@ namespace clutils {
 
 	cl::Program log_create_program(const cl::Context& context, const cl::Device& device, std::string_view source) {
 		cl_int ret;
-		auto program = cl::Program(context, source.data(), true, &ret);
+		auto program = cl::Program(context, source.data(), false, &ret);
+		if(ret != CL_SUCCESS) log_error("Program()", ret);
+
+		ret = program.build("-I res/opencl");
 		if(ret != CL_SUCCESS) {
 			log_error("Program()", ret);
 			std::string log;
