@@ -14,6 +14,9 @@
 // which requires input data length to be a power of two. For this reason, data here must be padded
 
 class ParticleStore {
+	const std::string sort_kernel_name = "sort_by_grid_cells_step";
+	const std::string grid_kernel_name = "regenerate_grid";
+
 	cl_float2 cell_size;
 	cl_int2 grid_size;
 	cl::Kernel sort_kernel;

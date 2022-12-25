@@ -21,8 +21,8 @@ void Simulation::init_from_recipe(const Recipe& recipe) {
 			board_size.x = window.width;
 			board_size.y = window.height;
 
-			store1 = ParticleStore(board_size, 30);
-			store2 = ParticleStore(board_size, 30);
+			store1 = ParticleStore(board_size, grid_resolution);
+			store2 = ParticleStore(board_size, grid_resolution);
 		}
 		else if(std::holds_alternative<Recipe::Friction>(step)) {
 			auto friction_struct = std::get<Recipe::Friction>(step);

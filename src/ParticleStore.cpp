@@ -63,7 +63,7 @@ void ParticleStore::update_particles_from_buffers(const cl::CommandQueue& queue)
 }
 
 void ParticleStore::init_kernels(const cl::Program program) {
-	sort_kernel = clutils::log_create_kernel(program, "sort_by_grid_cells_step");
+	sort_kernel = clutils::log_create_kernel(program, sort_kernel_name);
 	clutils::log_kernel_setarg(sort_kernel, 0, positions);
 	clutils::log_kernel_setarg(sort_kernel, 1, velocities);
 	clutils::log_kernel_setarg(sort_kernel, 2, colors);
@@ -71,7 +71,7 @@ void ParticleStore::init_kernels(const cl::Program program) {
 	clutils::log_kernel_setarg(sort_kernel, 4, cell_size);
 	clutils::log_kernel_setarg(sort_kernel, 5, grid_size.x);
 
-	grid_kernel = clutils::log_create_kernel(program, "regenerate_grid");
+	grid_kernel = clutils::log_create_kernel(program, grid_kernel_name);
 	clutils::log_kernel_setarg(grid_kernel, 0, positions);
 	clutils::log_kernel_setarg(grid_kernel, 1, velocities);
 	clutils::log_kernel_setarg(grid_kernel, 2, colors);

@@ -10,6 +10,7 @@
 class Simulation {
 	const std::string opencl_file_name = "res/opencl/simulation.cl";
 	const std::string opencl_kernel_name = "update_particle";
+	const int grid_resolution = 30;
 
 	cl_int2 board_size;
 	cl_float friction;
