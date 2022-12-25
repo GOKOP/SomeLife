@@ -14,8 +14,8 @@
 // which requires input data length to be a power of two. For this reason, data here must be padded
 
 class ParticleStore {
-	const std::string sort_kernel_name = "sort_by_grid_cells_step";
-	const std::string grid_kernel_name = "regenerate_grid";
+	static constexpr std::string_view sort_kernel_name = "sort_by_grid_cells_step";
+	static constexpr std::string_view grid_kernel_name = "regenerate_grid";
 
 	cl_float2 cell_size;
 	cl_int2 grid_size;
@@ -42,6 +42,7 @@ public:
 	cl::Buffer cell_positions;
 
 	ParticleStore(cl_int2 window_size, int grid_resolution);
+
 
 	inline std::size_t size() const { return real_size; }
 	inline std::size_t padded_size() const { return positions_cpu.size(); }
