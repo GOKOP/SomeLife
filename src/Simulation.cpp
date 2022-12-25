@@ -54,8 +54,8 @@ void Simulation::init_opencl() {
 	context = clutils::log_create_context(device);
 	command_queue = clutils::log_create_command_queue(context);
 
-	auto simulation_program = read_opencl_program("res/opencl/simulation.cl", device);
-	auto particle_grid_program = read_opencl_program("res/opencl/particle-grid.cl", device);
+	auto simulation_program = read_opencl_program(opencl_simulation_file, device);
+	auto particle_grid_program = read_opencl_program(opencl_particle_grid_file, device);
 	kernel = clutils::log_create_kernel(simulation_program, opencl_kernel_name);
 
 	old_store().init_opencl(context, command_queue, particle_grid_program);
