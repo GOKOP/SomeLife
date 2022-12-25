@@ -16,7 +16,6 @@ class Simulation {
 
 	cl::Context context;
 	cl::CommandQueue command_queue;
-	cl::Program program;
 	cl::Kernel kernel;
 	cl::NDRange global_work_size;
 
@@ -33,6 +32,7 @@ class Simulation {
 	void add_particle(const Particle& particle);
 	inline void add_rule(const Rule& rule) { rule_store.add_rule(rule); }
 	void add_random_particles(int amount, sf::Color color);
+	cl::Program read_opencl_program(std::string_view file, const cl::Device& device);
 
 	void init_from_recipe(const Recipe& recipe);
 	void init_opencl();

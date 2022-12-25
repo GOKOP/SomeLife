@@ -18,14 +18,17 @@ if(NOT MSVC)
 	target_compile_options(somelife PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+add_custom_target(copy-dirs ALL)
+add_dependencies(somelife copy-dirs)
+
 add_custom_command(
-	TARGET somelife POST_BUILD
+	TARGET copy-dirs POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	${CMAKE_SOURCE_DIR}/res
 	${CMAKE_CURRENT_BINARY_DIR}/res)
 
 add_custom_command(
-	TARGET somelife POST_BUILD
+	TARGET copy-dirs POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	${CMAKE_SOURCE_DIR}/recipes
 	${CMAKE_CURRENT_BINARY_DIR}/recipes)

@@ -18,6 +18,9 @@ void Simulation::init_from_recipe(const Recipe& recipe) {
 			auto window = std::get<Recipe::Window>(step);
 			board_size.x = window.width;
 			board_size.y = window.height;
+
+			store1 = ParticleStore(board_size, 30);
+			store2 = ParticleStore(board_size, 30);
 		}
 		else if(std::holds_alternative<Recipe::Friction>(step)) {
 			auto friction_struct = std::get<Recipe::Friction>(step);
@@ -34,6 +37,14 @@ void Simulation::init_from_recipe(const Recipe& recipe) {
 	}
 }
 
+cl::Program Simulation::read_opencl_program(std::string_view file, const cl::Device& device) {
+	std::ifstream input(file.data());
+	std::stringstream ss;
+	ss << input.rdbuf();
+	std::string source = ss.str();
+	return clutils::log_create_program(context, device, source);
+}
+
 void Simulation::init_opencl() {
 	old_store().overwrite_data_from_other(new_store());
 
@@ -41,19 +52,12 @@ void Simulation::init_opencl() {
 	context = clutils::log_create_context(device);
 	command_queue = clutils::log_create_command_queue(context);
 
-	// read program code
-	std::ifstream program_file(opencl_file_name);
-	if(!program_file.is_open()) std::cerr << "Can't open " << opencl_file_name << '\n';
-	std::stringstream ss;
-	ss << program_file.rdbuf();
-	std::string program_source = ss.str();
-	program_file.close();
+	auto simulation_program = read_opencl_program("res/opencl/simulation.cl", device);
+	auto particle_grid_program = read_opencl_program("res/opencl/particle-grid.cl", device);
+	kernel = clutils::log_create_kernel(simulation_program, opencl_kernel_name);
 
-	program = clutils::log_create_program(context, device, program_source);
-	kernel = clutils::log_create_kernel(program, opencl_kernel_name);
-
-	old_store().init_buffers_with_particles(context, command_queue);
-	new_store().init_buffers_with_particles(context, command_queue);
+	old_store().init_opencl(context, command_queue, particle_grid_program);
+	new_store().init_opencl(context, command_queue, particle_grid_program);
 	rule_store.init_buffers_with_rules(context, command_queue);
 
 	clutils::log_kernel_setarg(kernel, 6, static_cast<cl_int>(new_store().size()));
@@ -107,6 +111,7 @@ void Simulation::update() {
 	clutils::log_kernel_setarg(kernel, 5, new_store().colors);
 
 	clutils::log_enqueue_ndrange_kernel(command_queue, kernel, global_work_size);
+	new_store().regenerate_grid(command_queue);
 	new_store().update_particles_from_buffers(command_queue);
 }
 

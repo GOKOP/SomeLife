@@ -8,24 +8,48 @@
 // Note that this isn't an equivalent to the ParticleStore struct in the OpenCL C code
 // Note that `init_buffers_with_particles()` should be called between `add_particle()` and use
 
+// Particles are arranged in a grid, which is realized by sorting them according to their grid cell
+// and keeping track of where do the grid cells start in a separate vector.
+// To avoid copying data back and forth, they're sorted on the GPU, using the bitonic sort algorithm
+// which requires input data length to be a power of two. For this reason, data here must be padded
+
 class ParticleStore {
+	cl_float2 cell_size;
+	cl_int2 grid_size;
+	cl::Kernel sort_kernel;
+	cl::Kernel grid_kernel;
+	
 	// for reference on the CPU side
 	std::vector<cl_float2> positions_cpu;
 	std::vector<cl_float2> velocities_cpu;
 	std::vector<cl_uchar3> colors_cpu;
+
+	std::size_t real_size; // without padding
+
+	void pad_particles_to_pow2();
+	void init_kernels(const cl::Program program);
+	void init_buffers_with_particles(const cl::Context& context, const cl::CommandQueue& queue);
+	void sort_gpu_particles(const cl::CommandQueue& queue);
 
 public:
 	// these are just public because they're needed as read-write to pass them to the GPU
 	cl::Buffer positions;
 	cl::Buffer velocities;
 	cl::Buffer colors;
+	cl::Buffer cell_positions;
 
-	inline std::size_t size() const { return positions_cpu.size(); }
+	// dummy constructor because init data isn't available at Simulation construction
+	inline ParticleStore() {}; 
+	ParticleStore(cl_int2 window_size, int grid_resolution);
+
+	inline std::size_t size() const { return real_size; }
+	inline std::size_t padded_size() const { return positions_cpu.size(); }
 
 	void add_particle(const Particle& particle);
 	void overwrite_data_from_other(const ParticleStore& other);
 
-	void init_buffers_with_particles(const cl::Context& context, const cl::CommandQueue& queue);
+	void init_opencl(const cl::Context& context, const cl::CommandQueue& queue, const cl::Program& program);
+	void regenerate_grid(const cl::CommandQueue& queue);
 	void update_particles_from_buffers(const cl::CommandQueue& queue);
 
 
