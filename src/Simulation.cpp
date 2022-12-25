@@ -5,7 +5,9 @@
 #include <iostream>
 #include <sstream>
 
-Simulation::Simulation(const Recipe& recipe) {
+Simulation::Simulation(const Recipe& recipe):
+	store1({0, 0}, 1), store2({0, 0}, 1)
+{
 	init_from_recipe(recipe);
 	init_opencl();
 }

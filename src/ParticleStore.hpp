@@ -6,7 +6,7 @@
 #include "Particle.hpp"
 
 // Note that this isn't an equivalent to the ParticleStore struct in the OpenCL C code
-// Note that `init_buffers_with_particles()` should be called between `add_particle()` and use
+// Note that after adding particles and before properly using the class init_opencl() should be called
 
 // Particles are arranged in a grid, which is realized by sorting them according to their grid cell
 // and keeping track of where do the grid cells start in a separate vector.
@@ -38,8 +38,6 @@ public:
 	cl::Buffer colors;
 	cl::Buffer cell_positions;
 
-	// dummy constructor because init data isn't available at Simulation construction
-	inline ParticleStore() {}; 
 	ParticleStore(cl_int2 window_size, int grid_resolution);
 
 	inline std::size_t size() const { return real_size; }
